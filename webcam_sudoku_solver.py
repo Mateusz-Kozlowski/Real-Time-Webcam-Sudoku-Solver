@@ -51,16 +51,6 @@ def warp_sudoku_board(frame):
 	return blur_threshold_warp_sudoku_board, variable2undo_warp
 
 
-def split_boxes(blur_threshold_warp_sudoku_board):
-	squares = list()
-	rows = np.vsplit(blur_threshold_warp_sudoku_board, 9)
-	for row in rows:
-		cols = np.hsplit(row, 9)
-		for square in cols:
-			squares.append(square)
-	return squares
-
-
 class WebcamSudokuSolver:
 	def __init__(self, model):
 		self.model = model
@@ -79,82 +69,147 @@ class WebcamSudokuSolver:
 		cv.imshow('gray_warp_sudoku_board', blur_threshold_warp_sudoku_board)
 		cv.waitKey(0)
 
-		squares = split_boxes(blur_threshold_warp_sudoku_board)
-		digits = [-1 for x in range(81)]
-		index = -1
+		cv.imwrite('board.jpg', blur_threshold_warp_sudoku_board)
 
-		height = blur_threshold_warp_sudoku_board.shape[0] // 9
-		width = blur_threshold_warp_sudoku_board.shape[1] // 9
+		temp = [None for i in range(9)]
+		digits = [temp for i in range(9)]
 
-		offset_width = width // 10
-		offset_height = height // 10
+		offset_height = blur_threshold_warp_sudoku_board.shape[0] // (10 * 1 + 9 * 8)
+		offset_width = blur_threshold_warp_sudoku_board.shape[1] // (10 * 1 + 9 * 8)
 
-		for square in squares:
-			crop_image = warp[height * i + offset_height:height * (i + 1) - offset_height,
-						 width * j + offset_width:width * (j + 1) - offset_width]
+		temp_height = blur_threshold_warp_sudoku_board.shape[0] // 9
+		temp_width = blur_threshold_warp_sudoku_board.shape[1] // 9
 
+		temp_offset_height = temp_height // 10
+		temp_offset_width = temp_width // 10
 
+		first_crop_x = blur_threshold_warp_sudoku_board.shape[0] // 82
+		first_crop_y = blur_threshold_warp_sudoku_board.shape[1] // 82
 
-			cnts, _ = cv.findContours(square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-			biggest = max(cnts, key=cv.contourArea)
-			x, y, w, h, = cv.boundingRect(biggest)
-			cv.imshow(str(index), square)
-			square = cv.cvtColor(square, cv.COLOR_GRAY2BGR)
-			cv.rectangle(square, (x, y), (x + w, y + h), (0, 255, 0), 3)
-			cv.imshow(str(index) + '+rect', square)
-			cv.waitKey(0)
+		blur_threshold_warp_sudoku_board = blur_threshold_warp_sudoku_board[
+			0:
 
-			index += 1
-			cropped = square[6:len(square)-6, 6:len(square)-6]
-			contours, hierarchy = cv.findContours(cropped, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-			if len(contours) == 0:
-				digits[index] = 0
-				continue
-			biggest = max(contours, key=cv.contourArea)
-			if cv.contourArea(biggest) < 32:
-				# Why exactly 32? Whenever I have to choose any number, I choose a power of two
-				digits[index] = 0
-				continue
-			square = cv.bitwise_not(square)
-			x, y, w, h = cv.boundingRect(biggest)
-			# the biggest contour was founded in cropped image, not in original square
-			x += 6
-			y += 6
-			# width and height of the bounding square don't change
+		]
 
-			digit_rectangle = square
-			cy, cx = ndimage.measurements.center_of_mass(square)
-			rows, cols = square.shape
-			shiftx = np.round(cols / 2.0 - cx).astype(int)
-			shifty = np.round(rows / 2.0 - cy).astype(int)
+		# for y in range(9):
+		# 	for x in range(9):
+		# 		if digits[y][x] is None:
+		# 			print('D ', end='')
+		# 		else:
+		# 			print(digits[y][x], end=' ')
+		# 	print()
+		# cv.waitKey(0)
 
-			rows, cols = square.shape
-			M = np.float32([[1, 0, shiftx], [0, 1, shifty]])
-			square = cv.warpAffine(square, M, (cols, rows))
-
-			square = cv.bitwise_not(square)
-
-			# nie wiem co jest na jakich bitwisach, ale na pewno trzeba cyfre do 20 zmniejszyc
-			# a ostatecznie ma byc wycentrowane masowo 28x28
-			# no ale pamietaj o tych kolorkach czy pracujesz na black-white czy na white-black
-			# bo za ta petla squary traktujesz juz kolektywnie
-			# gosciu ma zajebiscie chyba ogarniete to co wyzej libertarianskie i
-			# a poza tym sprawdz z czego on nauczyl siec, a wg plik train jego
-			# moze ma fajny model
-			# jezeli nie bedzie dzialac cos to zawsze mozna sprobowac zrobic siec na fontach komputerowych
-			# gosciu ma w repo plik trenujacy, wiec jak cos bedzie latwo
-			# na koncu repo masz jak wytrenowac wow, teamwork i opensource, to sie szanuje
-
-			square = cv.resize(square, (28, 28), interpolation=cv.INTER_AREA)
-
+		print()
+		# print(digits)
 		cv.waitKey(0)
 
-		squares = squares.reshape(squares.shape[0], 28, 28, 1)
-		squares = squares.astype("float32")
-		squares = squares / 255
-		predictions = self.model.predict([squares])
-		index = 0
-		for prediction in predictions:
+		grid = blur_threshold_warp_sudoku_board.copy()
+		grid = cv.cvtColor(grid, cv.COLOR_GRAY2BGR)
 
-			index += 1
+		for i in range(9):
+			for j in range(9):
+				x1 = temp_width * j + temp_offset_width
+				x2 = temp_width * (j + 1) - temp_offset_width
+				y1 = temp_height * i + temp_offset_height
+				y2 = temp_height * (i + 1) - temp_offset_height
+				cv.line(
+					grid,
+					(x1, y1),
+					(x1, y2),
+					(0, 255, 0),
+					1
+				)
+				cv.line(
+					grid,
+					(x1, y1),
+					(x2, y1),
+					(0, 255, 0),
+					1
+				)
+
+		cv.imshow('grid', grid)
+		cv.waitKey(0)
+
+		for i in range(9):
+			for j in range(9):
+				# square = blur_threshold_warp_sudoku_board[
+				# 				offset_height + i * 9 * offset_height:(i+1) * 9 * offset_height,
+				# 				offset_width + j * 9 * offset_width:(j+1) * 9 * offset_width]
+
+				square = blur_threshold_warp_sudoku_board[
+							temp_height * i + temp_offset_height:temp_height * (i + 1) - temp_offset_height,
+							temp_width * j + temp_offset_width:temp_width * (j + 1) - temp_offset_width
+				]
+
+				# cv.imshow(str(j) + ':' + str(i) + 'square', square)
+				# cv.waitKey(0)
+
+				strongly_cropped_square = square[
+											int(1.5 * offset_height):int(6.5 * offset_height),
+											int(1.5 * offset_width):int(6.5 * offset_width)]
+
+				# cv.imshow(str(j) + ':' + str(i) + 'strongly cropped', strongly_cropped_square)
+				# cv.waitKey(0)
+
+				contours, hierarchy = cv.findContours(strongly_cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+				if len(contours) == 0:
+					digits[i][j] = 0
+					print(0, end=' ')
+					# print(digits[i][j], end=' ')
+					# print('ni ma kontur w strongly cropped')
+					# cv.waitKey(0)
+					# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
+					# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
+					continue
+				biggest = max(contours, key=cv.contourArea)
+				x, y, w, h, = cv.boundingRect(biggest)
+
+				if h < 2 * offset_height:
+					digits[i][j] = 0
+					print(0, end=' ')
+					# print(digits[i][j], end=' ')
+					# print('jest kontura, ale jest za mala')
+					# cv.waitKey(0)
+					# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
+					# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
+					continue
+
+				contours, hierarchy = cv.findContours(square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+				biggest = max(contours, key=cv.contourArea)
+				x, y, w, h, = cv.boundingRect(biggest)
+
+				digit = square[y:y+h, x:x+w]
+
+				print('D', end=' ')
+				# print('Jest ladnie cyferka')
+				# cv.imshow(str(j) + ':' + str(i) + 'digit', digit)
+				# cv.waitKey(0)
+				#
+				# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
+				# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
+				# cv.destroyWindow(str(j) + ':' + str(i) + 'digit')
+
+			print()
+
+		# input('For loops has ended, press any key to continue: ')
+
+		print()
+		for y in range(9):
+			for x in range(9):
+				if digits[y][x] is None:
+					print('D ', end='')
+				else:
+					print(digits[y][x], end=' ')
+			print()
+		cv.waitKey(0)
+
+		# squares = squares.reshape(squares.shape[0], 28, 28, 1)
+		# squares = squares.astype("float32")
+		# squares = squares / 255
+		# predictions = self.model.predict([squares])
+		# index = 0
+		# for prediction in predictions:
+		#
+		# 	index += 1
 		return frame
