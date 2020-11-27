@@ -58,78 +58,102 @@ class WebcamSudokuSolver:
 
 	def solve(self, frame):
 		blur_threshold_warp_sudoku_board, variable2undo_warp = warp_sudoku_board(frame)
-		# if blur_threshold_warp_sudoku_board is not None and blur_threshold_warp_sudoku_board[0] is not None:
-		# 	if len(blur_threshold_warp_sudoku_board) > 0 and len(blur_threshold_warp_sudoku_board[0]):
-		# 		cv.imshow('gray_warp_sudoku_board', blur_threshold_warp_sudoku_board)
-		# else:
-		# 	return frame
+
 		if blur_threshold_warp_sudoku_board is None or blur_threshold_warp_sudoku_board[0] is None:
 			return frame
-		# if len(blur_threshold_warp_sudoku_board) > 0 and len(blur_threshold_warp_sudoku_board[0]):
+
 		cv.imshow('gray_warp_sudoku_board', blur_threshold_warp_sudoku_board)
 		cv.waitKey(0)
 
-		cv.imwrite('board.jpg', blur_threshold_warp_sudoku_board)
+		board = blur_threshold_warp_sudoku_board
 
-		temp = [None for i in range(9)]
-		digits = [temp for i in range(9)]
+		board_height = board.shape[0]
+		board_width = board.shape[1]
 
-		offset_height = blur_threshold_warp_sudoku_board.shape[0] // (10 * 1 + 9 * 8)
-		offset_width = blur_threshold_warp_sudoku_board.shape[1] // (10 * 1 + 9 * 8)
+		temp = [False for x in range(9)]
+		digit_exists = list()
+		for x in range(9):
+			digit_exists.append(temp.copy())
 
-		temp_height = blur_threshold_warp_sudoku_board.shape[0] // 9
-		temp_width = blur_threshold_warp_sudoku_board.shape[1] // 9
-
-		temp_offset_height = temp_height // 10
-		temp_offset_width = temp_width // 10
-
-		first_crop_x = blur_threshold_warp_sudoku_board.shape[0] // 82
-		first_crop_y = blur_threshold_warp_sudoku_board.shape[1] // 82
-
-		blur_threshold_warp_sudoku_board = blur_threshold_warp_sudoku_board[
-			0:
-
-		]
-
-		# for y in range(9):
-		# 	for x in range(9):
-		# 		if digits[y][x] is None:
-		# 			print('D ', end='')
-		# 		else:
-		# 			print(digits[y][x], end=' ')
-		# 	print()
-		# cv.waitKey(0)
-
-		print()
-		# print(digits)
-		cv.waitKey(0)
-
-		grid = blur_threshold_warp_sudoku_board.copy()
-		grid = cv.cvtColor(grid, cv.COLOR_GRAY2BGR)
+		cropped_squares = list()
 
 		for i in range(9):
 			for j in range(9):
-				x1 = temp_width * j + temp_offset_width
-				x2 = temp_width * (j + 1) - temp_offset_width
-				y1 = temp_height * i + temp_offset_height
-				y2 = temp_height * (i + 1) - temp_offset_height
-				cv.line(
-					grid,
-					(x1, y1),
-					(x1, y2),
-					(0, 255, 0),
-					1
-				)
-				cv.line(
-					grid,
-					(x1, y1),
-					(x2, y1),
-					(0, 255, 0),
-					1
-				)
+				x1 = j * board_width // 9
+				x2 = (j + 1) * board_width // 9
+				y1 = i * board_height // 9
+				y2 = (i + 1) * board_height // 9
+				square = board[y1:y2, x1:x2]
 
-		cv.imshow('grid', grid)
-		cv.waitKey(0)
+				# cv.imshow('square', square)
+				# cv.resizeWindow('square', 200, 200)
+				# cv.waitKey(0)
+
+				delta_y = y2 - y1
+				delta_x = x2 - x1
+
+				cropped_square = square[delta_y // 10:int(0.9 * delta_y), delta_x // 10:int(0.9 * delta_x)]
+				cropped_squares.append(cropped_square)
+				strongly_cropped_square = square[3 * delta_y // 20:int(0.85 * delta_y), 3 * delta_x // 20:int(0.85 * delta_x)]
+
+				# cv.imshow('strongly_cropped_square', strongly_cropped_square)
+				# cv.resizeWindow('strongly_cropped_square', 200, 200)
+				# cv.waitKey(0)
+
+				contours, hierarchy = cv.findContours(strongly_cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+				if not contours:
+					# print('No contours')
+					# cv.waitKey(0)
+					continue
+				biggest = max(contours, key=cv.contourArea)
+				area = cv.contourArea(biggest)
+				if area < 2 * delta_y:
+					# print('Area to small')
+					# cv.waitKey(0)
+					continue
+				x, y, w, h, = cv.boundingRect(biggest)
+				if h < 0.75 * strongly_cropped_square.shape[0]:
+					# cv.imshow('square', square)
+					# cv.imshow('cropped', strongly_cropped_square)
+					# print('To short:')
+					# print('if h < 0.75 * delta_y: == True:')
+					# print('if ' + str(h) + '< 0.75 * ' + str(delta_y) + ': == True:')
+					# print(str(h) + '<' + str(0.75 * delta_y))
+					# cv.waitKey(0)
+					continue
+				# now we are sure that there is a digit
+				digit_exists[i][j] = True
+
+		inputs = None
+
+		index = 0
+		for cropped_square in cropped_squares:
+			y = index // 9
+			x = index % 9
+			if digit_exists[y][x] is True:
+				contours, hierarchy = cv.findContours(cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+				biggest = max(contours, key=cv.contourArea)
+				x, y, w, h = cv.boundingRect(biggest)
+				digit = cropped_square[y:y+h, x:x+w]
+				cv.imshow('digit', digit)
+				cv.waitKey(0)
+			index += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 		for i in range(9):
 			for j in range(9):
@@ -138,16 +162,16 @@ class WebcamSudokuSolver:
 				# 				offset_width + j * 9 * offset_width:(j+1) * 9 * offset_width]
 
 				square = blur_threshold_warp_sudoku_board[
-							temp_height * i + temp_offset_height:temp_height * (i + 1) - temp_offset_height,
-							temp_width * j + temp_offset_width:temp_width * (j + 1) - temp_offset_width
-				]
+						 temp_height * i + temp_offset_height:temp_height * (i + 1) - temp_offset_height,
+						 temp_width * j + temp_offset_width:temp_width * (j + 1) - temp_offset_width
+						 ]
 
 				# cv.imshow(str(j) + ':' + str(i) + 'square', square)
 				# cv.waitKey(0)
 
 				strongly_cropped_square = square[
-											int(1.5 * offset_height):int(6.5 * offset_height),
-											int(1.5 * offset_width):int(6.5 * offset_width)]
+										  int(1.5 * offset_height):int(6.5 * offset_height),
+										  int(1.5 * offset_width):int(6.5 * offset_width)]
 
 				# cv.imshow(str(j) + ':' + str(i) + 'strongly cropped', strongly_cropped_square)
 				# cv.waitKey(0)
@@ -179,16 +203,16 @@ class WebcamSudokuSolver:
 				biggest = max(contours, key=cv.contourArea)
 				x, y, w, h, = cv.boundingRect(biggest)
 
-				digit = square[y:y+h, x:x+w]
+				digit = square[y:y + h, x:x + w]
 
 				print('D', end=' ')
-				# print('Jest ladnie cyferka')
-				# cv.imshow(str(j) + ':' + str(i) + 'digit', digit)
-				# cv.waitKey(0)
-				#
-				# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
-				# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
-				# cv.destroyWindow(str(j) + ':' + str(i) + 'digit')
+			# print('Jest ladnie cyferka')
+			# cv.imshow(str(j) + ':' + str(i) + 'digit', digit)
+			# cv.waitKey(0)
+			#
+			# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
+			# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
+			# cv.destroyWindow(str(j) + ':' + str(i) + 'digit')
 
 			print()
 
