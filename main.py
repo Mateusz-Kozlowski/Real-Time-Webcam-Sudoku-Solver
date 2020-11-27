@@ -1,24 +1,15 @@
-print('Due TensorFlow library it may take a few second before it starts...')
-
 from webcam_sudoku_solver import *
 
-# import cv2 as cv
-# import numpy as np
-# import tensorflow as tf
-# import keras
-# from keras.models import load_model
-# import matplotlib.pyplot as plt
-
-WEBCAM_WIDTH, WEBCAM_HEIGHT = 1920, 1080
+import tensorflow as tf
 
 
 def main():
+	webcam_width, webcam_height = 1920, 1080
 	webcam = cv.VideoCapture(0)
-	webcam.set(cv.CAP_PROP_FRAME_WIDTH, WEBCAM_WIDTH)
-	webcam.set(cv.CAP_PROP_FRAME_HEIGHT, WEBCAM_HEIGHT)
+	webcam.set(cv.CAP_PROP_FRAME_WIDTH, webcam_width)
+	webcam.set(cv.CAP_PROP_FRAME_HEIGHT, webcam_height)
 
-	# model = load_model('cnn model.h5')
-	model = None
+	model = tf.keras.models.load_model('cnn model.h5', custom_objects=None, compile=True)
 
 	webcam_sudoku_solver = WebcamSudokuSolver(model)
 

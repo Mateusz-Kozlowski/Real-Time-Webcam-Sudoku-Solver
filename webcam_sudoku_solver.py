@@ -1,7 +1,9 @@
-import sudoku_solver
+from sudoku_solver import *
+
 import cv2 as cv
 import numpy as np
 from scipy import ndimage
+import matplotlib.pyplot as plt
 
 
 def warp_sudoku_board(frame):
@@ -32,8 +34,8 @@ def warp_sudoku_board(frame):
 		biggest = biggest_new
 		cv.drawContours(frame, biggest, -1, (0, 0, 255), 25)
 		pts1 = np.float32(biggest)  # PREPARE POINTS FOR WARP
-		warp_sudoku_board_width = 2 * 9 * 28
-		warp_sudoku_board_height = 2 * 9 * 28
+		warp_sudoku_board_width = 3 * 9 * 28
+		warp_sudoku_board_height = 3 * 9 * 28
 		# PREPARE POINTS FOR WARP
 		pts2 = np.float32(
 			[
@@ -49,6 +51,21 @@ def warp_sudoku_board(frame):
 			blur_threshold_frame, matrix, (warp_sudoku_board_width, warp_sudoku_board_height)
 		)
 	return blur_threshold_warp_sudoku_board, variable2undo_warp
+
+
+def get_best_shift(img):
+	cy, cx = ndimage.measurements.center_of_mass(img)
+	rows, cols = img.shape
+	shift_x = np.round(cols/2.0-cx).astype(int)
+	shift_y = np.round(rows/2.0-cy).astype(int)
+	return shift_x, shift_y
+
+
+def shift(img, sx, sy):
+	rows, cols = img.shape
+	m = np.float32([[1, 0, sx], [0, 1, sy]])
+	shifted = cv.warpAffine(img, m, (cols, rows))
+	return shifted
 
 
 class WebcamSudokuSolver:
@@ -76,7 +93,9 @@ class WebcamSudokuSolver:
 			digit_exists.append(temp.copy())
 
 		cropped_squares = list()
+		digits_count = 0
 
+		# check for all squares if a square contain a digit and save cropped square if so
 		for i in range(9):
 			for j in range(9):
 				x1 = j * board_width // 9
@@ -92,8 +111,6 @@ class WebcamSudokuSolver:
 				delta_y = y2 - y1
 				delta_x = x2 - x1
 
-				cropped_square = square[delta_y // 10:int(0.9 * delta_y), delta_x // 10:int(0.9 * delta_x)]
-				cropped_squares.append(cropped_square)
 				strongly_cropped_square = square[3 * delta_y // 20:int(0.85 * delta_y), 3 * delta_x // 20:int(0.85 * delta_x)]
 
 				# cv.imshow('strongly_cropped_square', strongly_cropped_square)
@@ -123,28 +140,58 @@ class WebcamSudokuSolver:
 					continue
 				# now we are sure that there is a digit
 				digit_exists[i][j] = True
+				digits_count += 1
+				cropped_square = square[delta_y // 10:int(0.95 * delta_y), delta_x // 10:int(0.95 * delta_x)]
+				cropped_squares.append(cropped_square)
 
-		inputs = None
-
-		index = 0
+		# prepare data from cropped squares and put it into inputs array
+		inputs = np.ones((digits_count, 28, 28, 1), dtype='float32')
+		digit_number = 0
 		for cropped_square in cropped_squares:
-			y = index // 9
-			x = index % 9
-			if digit_exists[y][x] is True:
-				contours, hierarchy = cv.findContours(cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-				biggest = max(contours, key=cv.contourArea)
-				x, y, w, h = cv.boundingRect(biggest)
-				digit = cropped_square[y:y+h, x:x+w]
-				cv.imshow('digit', digit)
-				cv.waitKey(0)
-			index += 1
+			contours, hierarchy = cv.findContours(cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+			biggest = max(contours, key=cv.contourArea)
+			x, y, w, h = cv.boundingRect(biggest)
+			digit = cropped_square[y:y+h, x:x+w]
+			if h > w:
+				factor = 20.0 / h
+				h = 20
+				w = int(round(w * factor))
+				digit = cv.resize(digit, (w, h), interpolation=cv.INTER_AREA)
+			else:
+				factor = 20.0 / w
+				w = 20
+				h = int(round(h * factor))
+				digit = cv.resize(digit, (w, h), interpolation=cv.INTER_AREA)
+			horizontal_margin = 28 - w
+			vertical_margin = 28 - h
+			left_margin = horizontal_margin // 2
+			right_margin = horizontal_margin - left_margin
+			top_margin = vertical_margin // 2
+			bottom_margin = vertical_margin - top_margin
+			digit = cv.copyMakeBorder(
+				digit, top_margin, bottom_margin, left_margin, right_margin, borderType=cv.BORDER_CONSTANT
+			)
+			shift_x, shift_y = get_best_shift(digit)
+			digit = shift(digit, shift_x, shift_y)
+			inputs[digit_number] = digit.reshape(28, 28, 1)
+			digit_number += 1
 
+		inputs = inputs / 255
 
+		# now it's time to check if inputs array contains correct data:
+		# for i in range(digits_count):
+		# 	print(i)
+		# 	plt.imshow(inputs[i], cmap="gray")
+		# 	plt.show()
 
+		predictions = self.model.predict([inputs])
 
+		for i in range(digits_count):
+			print('This is probably', np.argmax(predictions[i]))
+			plt.imshow(inputs[i], cmap="gray")
+			plt.show()
 
-
-
+		input('And those were all digits...')
 
 
 
