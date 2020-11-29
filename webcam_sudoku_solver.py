@@ -1,4 +1,4 @@
-from sudoku_solver import *
+import sudoku_solver
 
 import cv2 as cv
 import numpy as np
@@ -50,7 +50,8 @@ def warp_sudoku_board(frame):
 		blur_threshold_warp_sudoku_board = cv.warpPerspective(
 			blur_threshold_frame, matrix, (warp_sudoku_board_width, warp_sudoku_board_height)
 		)
-	return blur_threshold_warp_sudoku_board, variable2undo_warp
+		return blur_threshold_warp_sudoku_board, variable2undo_warp
+	return None, None
 
 
 def get_best_shift(img):
@@ -79,8 +80,8 @@ class WebcamSudokuSolver:
 		if blur_threshold_warp_sudoku_board is None or blur_threshold_warp_sudoku_board[0] is None:
 			return frame
 
-		cv.imshow('gray_warp_sudoku_board', blur_threshold_warp_sudoku_board)
-		cv.waitKey(0)
+		# cv.imshow('gray_warp_sudoku_board', blur_threshold_warp_sudoku_board)
+		# cv.waitKey(0)
 
 		board = blur_threshold_warp_sudoku_board
 
@@ -184,103 +185,136 @@ class WebcamSudokuSolver:
 		# 	plt.imshow(inputs[i], cmap="gray")
 		# 	plt.show()
 
+		if len(inputs) == 0:
+			return frame
 		predictions = self.model.predict([inputs])
 
-		for i in range(digits_count):
-			print('This is probably', np.argmax(predictions[i]))
-			plt.imshow(inputs[i], cmap="gray")
-			plt.show()
+		# for i in range(digits_count):
+		# 	print('This is probably', np.argmax(predictions[i]))
+		# 	plt.imshow(inputs[i], cmap="gray")
+		# 	plt.show()
+		# input('And those were all digits...')
 
-		input('And those were all digits...')
+		temp = [0 for x in range(9)]
+		new_sudoku = [temp.copy() for x in range(9)]
 
-
-
-
-
-
-
-
-
-
-		for i in range(9):
-			for j in range(9):
-				# square = blur_threshold_warp_sudoku_board[
-				# 				offset_height + i * 9 * offset_height:(i+1) * 9 * offset_height,
-				# 				offset_width + j * 9 * offset_width:(j+1) * 9 * offset_width]
-
-				square = blur_threshold_warp_sudoku_board[
-						 temp_height * i + temp_offset_height:temp_height * (i + 1) - temp_offset_height,
-						 temp_width * j + temp_offset_width:temp_width * (j + 1) - temp_offset_width
-						 ]
-
-				# cv.imshow(str(j) + ':' + str(i) + 'square', square)
-				# cv.waitKey(0)
-
-				strongly_cropped_square = square[
-										  int(1.5 * offset_height):int(6.5 * offset_height),
-										  int(1.5 * offset_width):int(6.5 * offset_width)]
-
-				# cv.imshow(str(j) + ':' + str(i) + 'strongly cropped', strongly_cropped_square)
-				# cv.waitKey(0)
-
-				contours, hierarchy = cv.findContours(strongly_cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-				if len(contours) == 0:
-					digits[i][j] = 0
-					print(0, end=' ')
-					# print(digits[i][j], end=' ')
-					# print('ni ma kontur w strongly cropped')
-					# cv.waitKey(0)
-					# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
-					# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
-					continue
-				biggest = max(contours, key=cv.contourArea)
-				x, y, w, h, = cv.boundingRect(biggest)
-
-				if h < 2 * offset_height:
-					digits[i][j] = 0
-					print(0, end=' ')
-					# print(digits[i][j], end=' ')
-					# print('jest kontura, ale jest za mala')
-					# cv.waitKey(0)
-					# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
-					# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
-					continue
-
-				contours, hierarchy = cv.findContours(square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-				biggest = max(contours, key=cv.contourArea)
-				x, y, w, h, = cv.boundingRect(biggest)
-
-				digit = square[y:y + h, x:x + w]
-
-				print('D', end=' ')
-			# print('Jest ladnie cyferka')
-			# cv.imshow(str(j) + ':' + str(i) + 'digit', digit)
-			# cv.waitKey(0)
-			#
-			# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
-			# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
-			# cv.destroyWindow(str(j) + ':' + str(i) + 'digit')
-
-			print()
-
-		# input('For loops has ended, press any key to continue: ')
-
-		print()
+		i = 0
 		for y in range(9):
 			for x in range(9):
-				if digits[y][x] is None:
-					print('D ', end='')
-				else:
-					print(digits[y][x], end=' ')
-			print()
-		cv.waitKey(0)
+				if digit_exists[y][x]:
+					new_sudoku[y][x] = np.argmax(predictions[i])
+					i += 1
 
-		# squares = squares.reshape(squares.shape[0], 28, 28, 1)
-		# squares = squares.astype("float32")
-		# squares = squares / 255
-		# predictions = self.model.predict([squares])
-		# index = 0
-		# for prediction in predictions:
+		# for row in new_sudoku:
+		# 	for square in row:
+		# 		print(square, end=' ')
+		# 	print()
+
+		# cv.waitKey(0)
+
+		for y in range(9):
+			for x in range(9):
+				print(new_sudoku[y][x], end=' ')
+			print()
+
+		# cv.waitKey(0)
+
+		# now it's time to check if solution of new sudoku can be last sudoku solution
+		solve_sudoku_again = False
+		if self.last_sudoku_solution is None:
+			solve_sudoku_again = True
+		else:
+			for y in range(9):
+				for x in range(9):
+					if new_sudoku[y][x] != 0:
+						if new_sudoku[y][x] is not self.last_sudoku_solution[y][x]:
+							solve_sudoku_again = True
+
+		if solve_sudoku_again:
+			sudoku_solver.solve_sudoku(new_sudoku)  # Solve it
+
+		# cv.waitKey(0)
+		# draw unwarp
+
+		# for i in range(9):
+		# 	for j in range(9):
+		# 		# square = blur_threshold_warp_sudoku_board[
+		# 		# 				offset_height + i * 9 * offset_height:(i+1) * 9 * offset_height,
+		# 		# 				offset_width + j * 9 * offset_width:(j+1) * 9 * offset_width]
 		#
-		# 	index += 1
+		# 		square = blur_threshold_warp_sudoku_board[
+		# 				 temp_height * i + temp_offset_height:temp_height * (i + 1) - temp_offset_height,
+		# 				 temp_width * j + temp_offset_width:temp_width * (j + 1) - temp_offset_width
+		# 				 ]
+		#
+		# 		# cv.imshow(str(j) + ':' + str(i) + 'square', square)
+		# 		# cv.waitKey(0)
+		#
+		# 		strongly_cropped_square = square[
+		# 								  int(1.5 * offset_height):int(6.5 * offset_height),
+		# 								  int(1.5 * offset_width):int(6.5 * offset_width)]
+		#
+		# 		# cv.imshow(str(j) + ':' + str(i) + 'strongly cropped', strongly_cropped_square)
+		# 		# cv.waitKey(0)
+		#
+		# 		contours, hierarchy = cv.findContours(strongly_cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+		# 		if len(contours) == 0:
+		# 			digits[i][j] = 0
+		# 			print(0, end=' ')
+		# 			# print(digits[i][j], end=' ')
+		# 			# print('ni ma kontur w strongly cropped')
+		# 			# cv.waitKey(0)
+		# 			# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
+		# 			# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
+		# 			continue
+		# 		biggest = max(contours, key=cv.contourArea)
+		# 		x, y, w, h, = cv.boundingRect(biggest)
+		#
+		# 		if h < 2 * offset_height:
+		# 			digits[i][j] = 0
+		# 			print(0, end=' ')
+		# 			# print(digits[i][j], end=' ')
+		# 			# print('jest kontura, ale jest za mala')
+		# 			# cv.waitKey(0)
+		# 			# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
+		# 			# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
+		# 			continue
+		#
+		# 		contours, hierarchy = cv.findContours(square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+		# 		biggest = max(contours, key=cv.contourArea)
+		# 		x, y, w, h, = cv.boundingRect(biggest)
+		#
+		# 		digit = square[y:y + h, x:x + w]
+		#
+		# 		print('D', end=' ')
+		# 	# print('Jest ladnie cyferka')
+		# 	# cv.imshow(str(j) + ':' + str(i) + 'digit', digit)
+		# 	# cv.waitKey(0)
+		# 	#
+		# 	# cv.destroyWindow(str(j) + ':' + str(i) + 'square')
+		# 	# cv.destroyWindow(str(j) + ':' + str(i) + 'strongly cropped')
+		# 	# cv.destroyWindow(str(j) + ':' + str(i) + 'digit')
+		#
+		# 	print()
+		#
+		# # input('For loops has ended, press any key to continue: ')
+		#
+		# print()
+		# for y in range(9):
+		# 	for x in range(9):
+		# 		if digits[y][x] is None:
+		# 			print('D ', end='')
+		# 		else:
+		# 			print(digits[y][x], end=' ')
+		# 	print()
+		# cv.waitKey(0)
+		#
+		# # squares = squares.reshape(squares.shape[0], 28, 28, 1)
+		# # squares = squares.astype("float32")
+		# # squares = squares / 255
+		# # predictions = self.model.predict([squares])
+		# # index = 0
+		# # for prediction in predictions:
+		# #
+		# # 	index += 1
 		return frame

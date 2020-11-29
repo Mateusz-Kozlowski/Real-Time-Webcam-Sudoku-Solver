@@ -19,6 +19,7 @@ def main():
 		if not successful_frame_read:
 			break
 
+		output_frame = frame
 		output_frame = webcam_sudoku_solver.solve(frame)
 
 		cv.imshow('Webcam Sudoku Solver', output_frame)
