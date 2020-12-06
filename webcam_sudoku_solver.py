@@ -1,7 +1,7 @@
 import sudoku_solver
 
-import cv2 as cv
 import numpy as np
+import cv2 as cv
 from scipy import ndimage
 import matplotlib.pyplot as plt
 
@@ -49,11 +49,67 @@ class WebcamSudokuSolver:
 
 		:return:
 		"""
-
 		warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
 
 		if warp_sudoku_board is None:
 			return frame
+
+		squares = get_squares(warp_sudoku_board)
+
+		digits_occurrence = check_digits_occurrence(squares)
+
+		inputs = prepare_inputs(squares, digits_occurrence)
+
+		current_attempt = 1
+
+		# while loop should start with rotation from last frame, should not start over and over from
+		while current_attempt <= 4:
+			if current_attempt == 1:
+				rotated_inputs = inputs
+			else:
+				rotated_inputs = rotate_inputs(inputs, 90 * (current_attempt - 1))
+
+			predictions = self.model.predict([inputs])
+
+			if not probabilities_are_good(predictions):  # check only average, separately maybe in the future (in digits = get_digits_grid(predictions, digits_occurrence))
+				current_attempt += 1
+				continue
+
+			# digits is correctly rotated grid, does not matter how rotated is sheet of paper, always look in this way:
+			# 4 0 0 0 0 0 0 1 0
+			# 0 0 0 0 0 2 0 0 3
+			# 0 0 0 4 0 0 0 0 0
+			# and so on and so on...
+			#
+			#
+			#
+			#
+			#
+			# so this is still the same sudoku, even if it was rotated in during last frame
+			# the only one problem may be unwarping, it's kinda confusing
+
+			digits_grid = get_digits_grid(predictions, digits_occurrence, current_attempt)
+
+			if not is_solvable(digits):
+				current_attempt += 1
+				continue
+
+			if new_sudoku_solution_may_be_last_solution(predictions):
+				unwarp_digits_on_frame(self.last_sudoku_solution, frame, current_attempt, warp_matrix)
+				return frame
+
+			# it is time to solve:
+			solution = sudoku_solver.solve_sudoku(digits_grid)
+
+			unwarp_digits_on_frame(solution, frame, current_attempt, warp_matrix)
+			return frame
+
+		# there is no sudoku! or sth went wrong, try again in the nexr frame!
+		return frame
+
+		#####################################################################
+
+
 
 		h, w = warp_sudoku_board.shape[:2]
 		center = w / 2, h / 2
@@ -84,15 +140,11 @@ class WebcamSudokuSolver:
 
 			squares = get_squares(rotated_sudoku_board)
 
-			is_there_a_digit_in_the_square = np.zeros((9, 9), dtype=bool)
+			digits_occurrence = check_digits_occurrence(squares)
 
 			for y in range(9):
 				for x in range(9):
-					is_there_a_digit_in_the_square[y, x] = contains_a_digit(squares[y][x])
-
-			for y in range(9):
-				for x in range(9):
-					print(int(is_there_a_digit_in_the_square[y, x]), end=' ')
+					print(int(digits_occurrence[y, x]), end=' ')
 				print()
 			print()
 
@@ -100,17 +152,19 @@ class WebcamSudokuSolver:
 
 			cv.destroyWindow('current_attempt=' + str(current_attempt))
 
+			# no it's time to recognize digits and average probability
+
+			inputs = prepare_inputs(squares, digits_occurrence)
 			###
+			return frame
 
 			solved = True
-
-			# inputs = prepare_inputs_for_model(strongly_cropped_squares_with_digits)
 
 			current_attempt += 1
 
 		return frame
 
-		# digits = get_digits(warp_image)
+
 
 
 
@@ -475,6 +529,7 @@ def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 
 	warp_matrix = cv.getPerspectiveTransform(pts1, pts2)
 	warp_sudoku_board = cv.warpPerspective(threshold_frame, warp_matrix, (warp_width, warp_height))
+	# _, warp_sudoku_board = cv.threshold(warp_sudoku_board, 1, 255, cv.THRESH_BINARY)
 
 	return warp_matrix, warp_sudoku_board
 
@@ -518,50 +573,105 @@ def get_squares(warp_sudoku_board):
 	return squares
 
 
-def contains_a_digit(square):
+def check_digits_occurrence(squares):
 	"""
 
-	:param square:
+	:param squares:
 	:return:
 	"""
-	delta_y = square.shape[0]
-	delta_x = square.shape[1]
+	digits_occurrence = np.zeros((9, 9), dtype=bool)
 
-	strongly_cropped_square = square[3 * delta_y // 20:int(0.85 * delta_y), 3 * delta_x // 20:int(0.85 * delta_x)]
+	for y in range(9):
+		for x in range(9):
+			square = squares[y][x]
 
-	contours, hierarchy = cv.findContours(strongly_cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-	if not contours:
-		return False
+			height = square.shape[0]
+			width = square.shape[1]
 
-	biggest = max(contours, key=cv.contourArea)
-	area = cv.contourArea(biggest)
-	if area < 2 * delta_y:
-		return False
+			strongly_cropped_square = square[3 * height // 20:int(0.85 * height), 3 * width // 20:int(0.85 * width)]
 
-	x, y, w, h, = cv.boundingRect(biggest)
-	if h < 0.75 * strongly_cropped_square.shape[0]:
-		return False
+			contours, hierarchy = cv.findContours(strongly_cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+			if not contours:
+				continue
 
-	return True
+			biggest = max(contours, key=cv.contourArea)
+			area = cv.contourArea(biggest)
+			if area < 2 * height:
+				continue
+
+			x_, y_, w_, h_, = cv.boundingRect(biggest)
+			if h_ < 0.75 * strongly_cropped_square.shape[0] and w_ < 0.75 * strongly_cropped_square.shape[1]:
+				continue
+
+			digits_occurrence[y, x] = True
+
+	for y in range(9):
+		for x in range(9):
+			print(int(digits_occurrence[y, x]), end=' ')
+		print()
+	print()
+
+	return digits_occurrence
 
 
-# def get_digits(warp_image):
-# 	"""
-#
-# 	:param warp_image:
-# 	:return:
-# 	"""
-# 	board_height = warp_image.shape[0]
-# 	board_width = warp_image.shape[1]
-#
-# 	digits = np.zeros((9, 9), dtype=bool)
-#
-# 	for y in range(9):
-# 		for x in range(9):
-# 			pass
-#
-# 	# input = self.
-#
-# 	cv.waitKey(0)
-#
-# 	return None
+def prepare_inputs(squares, digits_occurrence):
+	digits_count = 0
+	for y in digits_occurrence:
+		for x in y:
+			digits_count += int(x)
+
+	print('digits_count = ', digits_count)
+
+	cropped_squares_with_digits = [None for i in range(digits_count)]
+
+	index = 0
+	for y in range(9):
+		for x in range(9):
+			if digits_occurrence[y, x]:
+				height = squares[y][x].shape[0]
+				width = squares[y][x].shape[1]
+
+				# cv.imshow('square', squares[y][x])
+				# cv.waitKey(0)
+
+				cropped_squares_with_digits[index] = squares[y][x][
+														int(0.05 * height):int(0.95 * height),
+														int(0.05 * width):int(0.95 * width)
+													]
+
+				# cv.imshow('cropped', cropped_squares_with_digits[index])
+				# plt.imshow(cropped_squares_with_digits[index], cmap='gray')
+
+				while np.sum(cropped_squares_with_digits[index][0]) == 255 * len(cropped_squares_with_digits[index][0]):
+					cropped_squares_with_digits[index] = cropped_squares_with_digits[index][1:]
+
+				while np.sum(cropped_squares_with_digits[index][:, 0]) == 255 * len(cropped_squares_with_digits[index][:, 0]):
+					cropped_squares_with_digits[index] = np.delete(cropped_squares_with_digits[index], 0, 1)
+
+				while np.sum(cropped_squares_with_digits[index][-1]) == 255 * len(cropped_squares_with_digits[index][-1]):
+					cropped_squares_with_digits[index] = cropped_squares_with_digits[index][:-1]
+
+				while np.sum(cropped_squares_with_digits[index][:, -1]) == 255 * len(cropped_squares_with_digits[index][:, -1]):
+					cropped_squares_with_digits[index] = np.delete(cropped_squares_with_digits[index], -1, 1)
+
+				# cv.imshow('+while', cropped_squares_with_digits[index])
+
+				# print(cropped_squares_with_digits[index][:, 0])
+
+				# cv.waitKey(0)
+				# plt.imshow(cropped_squares_with_digits[index], cmap='gray')
+				# plt.show()
+
+				index += 1
+
+	for i in cropped_squares_with_digits:
+		# cv.imshow('i', i)
+		plt.imshow(i, cmap='gray')
+		plt.show()
+		# cv.destroyWindow('i')
+
+	###
+
+	inputs = np.array((digits_count, 28, 28, 1), dtype='float32')
+
+	return inputs
