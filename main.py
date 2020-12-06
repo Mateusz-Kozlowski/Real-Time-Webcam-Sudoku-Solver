@@ -22,8 +22,7 @@ def main():
 		output_frame = webcam_sudoku_solver.solve(frame)
 
 		cv.imshow('Webcam Sudoku Solver', output_frame)
-		key = cv.waitKey(1)
-		if key == 27:
+		if cv.waitKey(1):
 			break
 
 	cv.destroyAllWindows()
