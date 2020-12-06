@@ -47,15 +47,19 @@ class WebcamSudokuSolver:
 				continue
 
 			# digits is correctly rotated grid, does not matter how rotated is sheet of paper, always look in this way:
-			# 4 0 0 0 0 0 0 1 0
-			# 0 0 0 0 0 2 0 0 3
-			# 0 0 0 4 0 0 0 0 0
-			# and so on and so on...
-			#
-			#
-			#
-			#
-			#
+
+			'''
+			4 0 0 0 0 0 0 1 0
+			0 0 0 0 0 2 0 0 3
+			0 0 0 4 0 0 0 0 0
+			0 0 0 0 0 0 5 0 0
+			6 0 1 7 0 0 0 0 0
+			0 0 4 1 0 0 0 0 0
+			0 5 0 0 0 0 2 0 0
+			0 0 0 0 8 0 0 6 0
+			0 3 0 9 1 0 0 0 0
+			'''
+
 			# so this is still the same sudoku, even if it was rotated in during last frame
 			# the only one problem may be unwarping, it's kinda confusing
 
