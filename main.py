@@ -33,4 +33,3 @@ if __name__ == "__main__":
 	main()
 
 print('Code is done, so everything works fine!')
-print('I have to add sth because of a new commit')
