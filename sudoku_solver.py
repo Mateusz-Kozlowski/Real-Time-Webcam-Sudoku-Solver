@@ -3,7 +3,6 @@ import numpy as np
 
 def solve_sudoku(digits_grid):
 	"""
-
 	:param digits_grid:
 	:return:
 	"""
