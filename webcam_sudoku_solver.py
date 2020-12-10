@@ -1,5 +1,7 @@
 import sudoku_solver
 
+from copy import copy, deepcopy
+
 import numpy as np
 import cv2 as cv
 from scipy import ndimage
@@ -29,8 +31,6 @@ class WebcamSudokuSolver:
 		squares = get_squares(warp_sudoku_board)
 
 		digits_occurrence = check_digits_occurrence(squares)
-
-		input('It was digits occurrence, now it is time to prepare_inputs function that is not done yet!...')
 
 		inputs = prepare_inputs(squares, digits_occurrence)
 
@@ -233,7 +233,6 @@ def check_digits_occurrence(squares):
 	:return:
 	"""
 	digits_occurrence = np.zeros((9, 9), dtype=bool)
-	remove_later = 0
 
 	for y in range(9):
 		for x in range(9):
@@ -258,14 +257,12 @@ def check_digits_occurrence(squares):
 				continue
 
 			digits_occurrence[y, x] = True
-			remove_later += 1
 
 	print('Print from check occurrence function')
 	for y in range(9):
 		for x in range(9):
 			print(int(digits_occurrence[y, x]), end=' ')
 		print()
-	print(remove_later)
 	print()
 
 	return digits_occurrence
@@ -288,59 +285,89 @@ def prepare_inputs(squares, digits_occurrence):
 	print('digits_count = ', digits_count)
 	print()
 
-	cropped_squares_with_digits = [None for i in range(digits_count)]
+	cropped_squares_with_digits = get_cropped_squares_with_digits(squares, digits_occurrence)
 
-	index = 0
+	digits = get_cropped_digits(cropped_squares_with_digits)
+
+	for i in digits:
+		plt.imshow(i, cmap='gray')
+		plt.show()
+
+	###
+	# now it is time to rescale digits to 20xsth or sthx20 size and shift them into centers of them mass
+	###
+
+	inputs = np.array((digits_count, 28, 28, 1), dtype='float32')
+
+	return inputs
+
+
+def get_cropped_squares_with_digits(squares, digits_occurrence):
+	"""
+	Prepares squares that contains digits to find the biggest EXTERNAL contours by removing white lines from sudoku grid
+	:param squares:
+	:param digits_occurrence:
+	:return:
+	"""
+	cropped_squares_with_digits = list()
+
 	for y in range(9):
 		for x in range(9):
 			if digits_occurrence[y, x]:
 				height = squares[y][x].shape[0]
 				width = squares[y][x].shape[1]
 
-				# cv.imshow('square', squares[y][x])
-				# cv.waitKey(0)
+				cropped_squares_with_digits.append(
+					deepcopy(
+						squares[y][x][
+							int(0.05 * height):int(0.95 * height),
+							int(0.05 * width):int(0.95 * width)
+						]
+					)
+				)
 
-				cropped_squares_with_digits[index] = squares[y][x][
-														int(0.05 * height):int(0.95 * height),
-														int(0.05 * width):int(0.95 * width)
-													]
+				binary = deepcopy(cropped_squares_with_digits[-1])
+				_, binary = cv.threshold(binary, 0, 255, cv.THRESH_BINARY)
 
-				# cv.imshow('cropped', cropped_squares_with_digits[index])
-				# plt.imshow(cropped_squares_with_digits[index], cmap='gray')
+				while np.sum(binary[0]) >= int(0.9 * 255 * len(binary[0])):
+					binary = binary[1:]
+					cropped_squares_with_digits[-1] = cropped_squares_with_digits[-1][1:]
 
-				while np.sum(cropped_squares_with_digits[index][0]) == 255 * len(cropped_squares_with_digits[index][0]):
-					cropped_squares_with_digits[index] = cropped_squares_with_digits[index][1:]
+				while np.sum(binary[:, 0]) >= int(0.9 * 255 * len(binary[:, 0])):
+					binary = np.delete(binary, 0, 1)
+					cropped_squares_with_digits[-1] = np.delete(cropped_squares_with_digits[-1], 0, 1)
 
-				while np.sum(cropped_squares_with_digits[index][:, 0]) == 255 * len(cropped_squares_with_digits[index][:, 0]):
-					cropped_squares_with_digits[index] = np.delete(cropped_squares_with_digits[index], 0, 1)
+				while np.sum(binary[-1]) >= int(0.9 * 255 * len(binary[-1])):
+					binary = binary[:-1]
+					cropped_squares_with_digits[-1] = cropped_squares_with_digits[-1][:-1]
 
-				while np.sum(cropped_squares_with_digits[index][-1]) == 255 * len(cropped_squares_with_digits[index][-1]):
-					cropped_squares_with_digits[index] = cropped_squares_with_digits[index][:-1]
+				while np.sum(binary[:, -1]) >= int(0.9 * 255 * len(binary[:, -1])):
+					binary = np.delete(binary, -1, 1)
+					cropped_squares_with_digits[-1] = np.delete(cropped_squares_with_digits[-1], -1, 1)
 
-				while np.sum(cropped_squares_with_digits[index][:, -1]) == 255 * len(cropped_squares_with_digits[index][:, -1]):
-					cropped_squares_with_digits[index] = np.delete(cropped_squares_with_digits[index], -1, 1)
+	return cropped_squares_with_digits
 
-				# cv.imshow('+while', cropped_squares_with_digits[index])
 
-				# print(cropped_squares_with_digits[index][:, 0])
-
-				# cv.waitKey(0)
-				# plt.imshow(cropped_squares_with_digits[index], cmap='gray')
-				# plt.show()
-
-				index += 1
-
+def get_cropped_digits(cropped_squares_with_digits, remove_noise=True):
+	"""
+	Crops digits to their bounding rectangles. Also can remove noise.
+	:param cropped_squares_with_digits:
+	:param remove_noise:
+	:return:
+	"""
+	digits = list()
 	for i in cropped_squares_with_digits:
-		# cv.imshow('i', i)
-		plt.imshow(i, cmap='gray')
-		plt.show()
-		# cv.destroyWindow('i')
-
-	###
-
-	inputs = np.array((digits_count, 28, 28, 1), dtype='float32')
-
-	return inputs
+		contours, _ = cv.findContours(i, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+		biggest = max(contours, key=cv.contourArea)
+		digit = deepcopy(i)
+		if remove_noise:
+			mask = np.zeros(i.shape, np.uint8)
+			cv.drawContours(mask, [biggest], -1, (255, 255, 255), -1)
+			digit = cv.bitwise_and(i, mask)
+		x, y, w, h = cv.boundingRect(biggest)
+		digit = digit[y:y+h, x:x+w]
+		digits.append(digit)
+	return digits
 
 
 def get_best_shift(img):

@@ -9,15 +9,17 @@ def main():
 	webcam.set(cv.CAP_PROP_FRAME_WIDTH, webcam_width)
 	webcam.set(cv.CAP_PROP_FRAME_HEIGHT, webcam_height)
 
-	model = tf.keras.models.load_model('cnn model.h5', custom_objects=None, compile=True)
+	model = tf.keras.models.load_model('Models/cnn model.h5', custom_objects=None, compile=True)
 
 	webcam_sudoku_solver = WebcamSudokuSolver(model)
 
 	while webcam.isOpened():
-		successful_frame_read, frame = webcam.read()
+		# successful_frame_read, frame = webcam.read()
 
-		if not successful_frame_read:
-			break
+		# if not successful_frame_read:
+		# 	break
+
+		frame = cv.imread('Fake webcam/1.jpg')
 
 		output_frame = webcam_sudoku_solver.solve(frame)
 
