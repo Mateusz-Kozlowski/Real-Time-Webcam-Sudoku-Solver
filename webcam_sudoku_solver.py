@@ -1,6 +1,6 @@
 import sudoku_solver
 
-from copy import copy, deepcopy
+from copy import deepcopy
 
 import numpy as np
 import cv2 as cv
@@ -41,6 +41,14 @@ class WebcamSudokuSolver:
 			rotated_inputs = rotate_inputs(inputs, rotation_angle)
 
 			predictions = self.model.predict([rotated_inputs])
+
+			print('Predictions:')
+			for i in predictions:
+				print(np.argmax(i), end=' ')
+
+			input('Dziala? Taktyczne X D jak cos...')
+
+			###
 
 			if not probabilities_are_good(predictions):  # check only average, separately maybe in the future (in digits = get_digits_grid(predictions, digits_occurrence))
 				current_attempt += 1
@@ -268,9 +276,6 @@ def check_digits_occurrence(squares):
 	return digits_occurrence
 
 
-###
-
-
 def prepare_inputs(squares, digits_occurrence):
 	"""
 	:param squares:
@@ -289,17 +294,25 @@ def prepare_inputs(squares, digits_occurrence):
 
 	digits = get_cropped_digits(cropped_squares_with_digits)
 
-	for i in digits:
-		plt.imshow(i, cmap='gray')
-		plt.show()
+	resize(digits)
 
-	###
-	# now it is time to rescale digits to 20xsth or sthx20 size and shift them into centers of them mass
-	###
+	digits = add_margins(digits, 28, 28)
 
-	inputs = np.array((digits_count, 28, 28, 1), dtype='float32')
+	center_using_mass_centers(digits)
 
-	return inputs
+	digits = digits.reshape(digits.shape[0], 28, 28, 1)
+
+	digits = digits / 255
+
+	# print('Take a look how inputs look (from prepare inputs function):')
+	#
+	# for i in digits:
+	# 	plt.imshow(i, cmap='gray')
+	# 	plt.show()
+	#
+	# input('Now it is time to go back from prepare inputs function')
+
+	return digits
 
 
 def get_cropped_squares_with_digits(squares, digits_occurrence):
@@ -318,12 +331,10 @@ def get_cropped_squares_with_digits(squares, digits_occurrence):
 				width = squares[y][x].shape[1]
 
 				cropped_squares_with_digits.append(
-					deepcopy(
-						squares[y][x][
-							int(0.05 * height):int(0.95 * height),
-							int(0.05 * width):int(0.95 * width)
-						]
-					)
+					squares[y][x][
+						int(0.05 * height):int(0.95 * height),
+						int(0.05 * width):int(0.95 * width)
+					]
 				)
 
 				binary = deepcopy(cropped_squares_with_digits[-1])
@@ -370,6 +381,71 @@ def get_cropped_digits(cropped_squares_with_digits, remove_noise=True):
 	return digits
 
 
+def resize(digits):
+	"""
+	:param digits:
+	:return:
+	"""
+	for index in range(len(digits)):
+		h = digits[index].shape[0]  # height
+		w = digits[index].shape[1]  # width
+
+		if h > w:
+			factor = 20.0 / h
+			h = 20
+			w = int(round(w * factor))
+		else:
+			factor = 20.0 / w
+			w = 20
+			h = int(round(h * factor))
+
+		digits[index] = cv.resize(digits[index], (w, h), interpolation=cv.INTER_AREA)
+
+
+def add_margins(digits, new_width, new_height):
+	"""
+	:param digits:
+	:param new_width:
+	:param new_height:
+	:return:
+	"""
+	digits_array = np.zeros((len(digits), new_width, new_height), dtype='float32')
+
+	i = 0
+	for digit in digits:
+		h = digit.shape[0]  # height
+		w = digit.shape[1]  # width
+
+		horizontal_margin = new_width - w
+		vertical_margin = new_height - h
+
+		left_margin = horizontal_margin // 2
+		right_margin = horizontal_margin - left_margin
+
+		top_margin = vertical_margin // 2
+		bottom_margin = vertical_margin - top_margin
+
+		digits_array[i] = cv.copyMakeBorder(
+			digit, top_margin, bottom_margin, left_margin, right_margin, borderType=cv.BORDER_CONSTANT
+		)
+
+		i += 1
+
+	return digits_array
+
+
+def center_using_mass_centers(digits):
+	"""
+	:param digits:
+	:return:
+	"""
+	for i in range(len(digits)):
+		shift_x, shift_y = get_best_shift(digits[i])
+		rows, cols = digits[i].shape
+		m = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+		digits[i] = cv.warpAffine(digits[i], m, (cols, rows))
+
+
 def get_best_shift(img):
 	"""
 	:param img:
@@ -380,19 +456,6 @@ def get_best_shift(img):
 	shift_x = np.round(cols/2.0-cx).astype(int)
 	shift_y = np.round(rows/2.0-cy).astype(int)
 	return shift_x, shift_y
-
-
-def shift(img, shift_x, shift_y):
-	"""
-	:param img:
-	:param shift_x:
-	:param shift_y:
-	:return:
-	"""
-	rows, cols = img.shape
-	m = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
-	shifted = cv.warpAffine(img, m, (cols, rows))
-	return shifted
 
 
 def rotate_inputs(inputs, rotation_angle):
