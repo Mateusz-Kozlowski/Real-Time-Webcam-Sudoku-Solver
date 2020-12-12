@@ -42,36 +42,22 @@ class WebcamSudokuSolver:
 
 			predictions = self.model.predict([rotated_inputs])
 
-			print('Predictions:')
-			for i in predictions:
-				print(np.argmax(i), end=' ')
-
-			input('Dziala? Taktyczne X D jak cos...')
-
-			###
-
-			if not probabilities_are_good(predictions):  # check only average, separately maybe in the future (in digits = get_digits_grid(predictions, digits_occurrence))
+			# TODO choose a value (for example 90%), check on a rotated sudoku, and note on a whiteboard can help
+			if not probabilities_are_good(predictions):
 				current_attempt += 1
 				continue
 
-			# digits is correctly rotated grid, does not matter how rotated is sheet of paper, always look in this way:
-
-			'''
-			4 0 0 0 0 0 0 1 0
-			0 0 0 0 0 2 0 0 3
-			0 0 0 4 0 0 0 0 0
-			0 0 0 0 0 0 5 0 0
-			6 0 1 7 0 0 0 0 0
-			0 0 4 1 0 0 0 0 0
-			0 5 0 0 0 0 2 0 0
-			0 0 0 0 8 0 0 6 0
-			0 3 0 9 1 0 0 0 0
-			'''
-
-			# so this is still the same sudoku, even if it was rotated in during last frame
-			# the only one problem may be unwarping, it's kinda confusing
-
+			# TODO check if matrix normalization works correctly for every rotation
 			digits_grid = get_digits_grid(predictions, digits_occurrence, rotation_angle)
+
+			for y in digits_grid:
+				for x in y:
+					print(x, end=' ')
+				print()
+
+			input('Even if it works, it may not work when a sudoku is rotated... If even...')
+
+			###
 
 			if not is_solvable(digits_grid):
 				current_attempt += 1
@@ -266,13 +252,6 @@ def check_digits_occurrence(squares):
 
 			digits_occurrence[y, x] = True
 
-	print('Print from check occurrence function')
-	for y in range(9):
-		for x in range(9):
-			print(int(digits_occurrence[y, x]), end=' ')
-		print()
-	print()
-
 	return digits_occurrence
 
 
@@ -287,8 +266,7 @@ def prepare_inputs(squares, digits_occurrence):
 		for x in y:
 			digits_count += int(x)
 
-	print('digits_count = ', digits_count)
-	print()
+	print('digits_count =', digits_count)
 
 	cropped_squares_with_digits = get_cropped_squares_with_digits(squares, digits_occurrence)
 
@@ -303,14 +281,6 @@ def prepare_inputs(squares, digits_occurrence):
 	digits = digits.reshape(digits.shape[0], 28, 28, 1)
 
 	digits = digits / 255
-
-	# print('Take a look how inputs look (from prepare inputs function):')
-	#
-	# for i in digits:
-	# 	plt.imshow(i, cmap='gray')
-	# 	plt.show()
-	#
-	# input('Now it is time to go back from prepare inputs function')
 
 	return digits
 
@@ -464,7 +434,20 @@ def rotate_inputs(inputs, rotation_angle):
 	:param rotation_angle:
 	:return:
 	"""
-	return inputs
+	rotation_angle = rotation_angle % 360
+	rotated_inputs = deepcopy(inputs)
+
+	if rotation_angle == 90:
+		for i in range(len(rotated_inputs)):
+			rotated_inputs[i] = cv.rotate(rotated_inputs[i], cv.ROTATE_90_CLOCKWISE)
+	elif rotation_angle == 180:
+		for i in range(len(rotated_inputs)):
+			rotated_inputs[i] = cv.rotate(rotated_inputs[i], cv.ROTATE_180)
+	elif rotation_angle == 270:
+		for i in range(len(rotated_inputs)):
+			rotated_inputs[i] = cv.rotate(rotated_inputs[i], cv.ROTATE_90_COUNTERCLOCKWISE)
+
+	return rotated_inputs
 
 
 def probabilities_are_good(predictions):
@@ -472,6 +455,14 @@ def probabilities_are_good(predictions):
 	:param predictions:
 	:return:
 	"""
+	average = 0
+	for prediction in predictions:
+		average += prediction[np.argmax(prediction)]
+	average = average / len(predictions)
+	print('average =', average)
+	if average < 0.9:
+		print('Average is too small!')
+		return False
 	return True
 
 
@@ -482,7 +473,25 @@ def get_digits_grid(predictions, digits_occurrence, rotation_angle):
 	:param rotation_angle:
 	:return:
 	"""
-	return digits_occurrence
+	digits_grid = np.zeros((9, 9), np.uint8)
+
+	rotation_angle = rotation_angle % 360
+
+	i = 0
+	for y in range(9):
+		for x in range(9):
+			if digits_occurrence[y, x]:
+				if predictions[i][np.argmax(predictions[i])] > 0.5:
+					digits_grid[y, x] = np.argmax(predictions[i])
+				else:
+					print('A digit is strange; probability=', predictions[i][np.argmax(predictions[i])])
+					digits_grid[y, x] = 0
+				i += 1
+
+	if rotation_angle != 0:
+		np.rot90(digits_grid, (360 - rotation_angle) / 90)
+
+	return digits_grid
 
 
 def is_solvable(digits_grid):
