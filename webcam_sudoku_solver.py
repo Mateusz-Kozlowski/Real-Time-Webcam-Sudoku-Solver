@@ -47,7 +47,6 @@ class WebcamSudokuSolver:
 				current_attempt += 1
 				continue
 
-			# TODO check if matrix normalization works correctly for every rotation
 			digits_grid = get_digits_grid(predictions, digits_occurrence, rotation_angle)
 
 			for y in digits_grid:
@@ -55,26 +54,22 @@ class WebcamSudokuSolver:
 					print(x, end=' ')
 				print()
 
-			input('Even if it works, it may not work when a sudoku is rotated... If even...')
-
-			###
-
-			if not is_solvable(digits_grid):
-				current_attempt += 1
-				continue
-
 			if self.new_sudoku_solution_may_be_last_solution(digits_grid):
+				# TODO make unwarp_digits_on_frame func
 				unwarp_digits_on_frame(self.last_sudoku_solution, frame, warp_matrix, rotation_angle)
 				return frame
 
-			solution_digits_grid = sudoku_solver.solve_sudoku(digits_grid)
-			if solution_digits_grid is None:
+			if not sudoku_solver.solve_sudoku(digits_grid):
 				current_attempt += 1
 				continue
 
-			self.last_sudoku_solution = solution_digits_grid
+			print(digits_grid)
 
-			unwarp_digits_on_frame(solution_digits_grid, frame, warp_matrix, rotation_angle)
+			# TODO maybe deepcopy is not necessary
+			self.last_sudoku_solution = deepcopy(digits_grid)
+
+			# TODO make unwarp_digits_on_frame func
+			unwarp_digits_on_frame(digits_grid, frame, warp_matrix, rotation_angle)
 			return frame
 
 		return frame
@@ -494,14 +489,6 @@ def get_digits_grid(predictions, digits_occurrence, rotation_angle):
 	return digits_grid
 
 
-def is_solvable(digits_grid):
-	"""
-	:param digits_grid:
-	:return:
-	"""
-	return True
-
-
 def unwarp_digits_on_frame(solution_digits_grid, frame, warp_matrix, rotation_angle):
 	"""
 	:param solution_digits_grid:
@@ -510,4 +497,5 @@ def unwarp_digits_on_frame(solution_digits_grid, frame, warp_matrix, rotation_an
 	:param rotation_angle:
 	:return:
 	"""
+	blank = np.zeros()
 	return frame
