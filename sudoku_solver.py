@@ -169,9 +169,12 @@ def remove_orphans_technique(digits_grid, human_notes):
 		for x in range(9):
 			if len(human_notes[y, x]) == 1:
 				sth_has_changed = True
+
 				# get first element of a set
+				digit = 0  # it isn't necessarily but removes a warning from PyCharm
 				for digit in human_notes[y, x]:
 					break
+
 				digits_grid[y, x] = digit
 				human_notes[y, x] = set()
 
