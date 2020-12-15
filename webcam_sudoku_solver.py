@@ -49,6 +49,7 @@ class WebcamSudokuSolver:
 
 			digits_grid = get_digits_grid(predictions, digits_occurrence, rotation_angle)
 
+			print('Digits grid from frame')
 			for y in digits_grid:
 				for x in y:
 					print(x, end=' ')
