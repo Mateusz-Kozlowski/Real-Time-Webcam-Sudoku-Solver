@@ -49,29 +49,31 @@ class WebcamSudokuSolver:
 
 			digits_grid = get_digits_grid(predictions, digits_occurrence, rotation_angle)
 
-			print('Digits grid from frame')
-			for y in digits_grid:
-				for x in y:
-					print(x, end=' ')
-				print()
+			# print('Digits grid')
+			# for y in digits_grid:
+			# 	for x in y:
+			# 		print(x, end=' ')
+			# 	print()
 
-			if self.new_sudoku_solution_may_be_last_solution(digits_grid):
-				# TODO make unwarp_digits_on_frame func
-				unwarp_digits_on_frame(self.last_sudoku_solution, frame, warp_matrix, rotation_angle)
+			solved_digits_grid = deepcopy(digits_grid)
+			if self.new_sudoku_solution_may_be_last_solution(solved_digits_grid):
+				# TODO make inverse_warp_digits_on_frame func
+				inverse_warp_digits_on_frame(self.last_sudoku_solution, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle)
 				return frame
 
-			if not sudoku_solver.solve_sudoku(digits_grid):
+			if not sudoku_solver.solve_sudoku(solved_digits_grid):
 				current_attempt += 1
 				continue
 
-			print(digits_grid)
-
 			# TODO maybe deepcopy is not necessary
-			self.last_sudoku_solution = deepcopy(digits_grid)
+			self.last_sudoku_solution = deepcopy(solved_digits_grid)
 
-			# TODO make unwarp_digits_on_frame func
-			unwarp_digits_on_frame(digits_grid, frame, warp_matrix, rotation_angle)
-			return frame
+			# TODO make inverse_warp_digits_on_frame func
+			result = inverse_warp_digits_on_frame(
+				digits_grid, solved_digits_grid, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle
+			)
+
+			return result
 
 		return frame
 
@@ -490,13 +492,59 @@ def get_digits_grid(predictions, digits_occurrence, rotation_angle):
 	return digits_grid
 
 
-def unwarp_digits_on_frame(solution_digits_grid, frame, warp_matrix, rotation_angle):
+def inverse_warp_digits_on_frame(digits_grid, solution_digits_grid, frame, warp_dimensions, warp_matrix, rotation_angle):
 	"""
+	:param digits_grid:
 	:param solution_digits_grid:
 	:param frame:
+	:param warp_dimensions:
 	:param warp_matrix:
 	:param rotation_angle:
 	:return:
 	"""
-	blank = np.zeros()
-	return frame
+	only_digits = get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rotation_angle)
+
+	inverted_warped_only_digits = cv.warpPerspective(
+		only_digits, warp_matrix, (frame.shape[1], frame.shape[0]), flags=cv.WARP_INVERSE_MAP
+	)
+
+	result = np.where(inverted_warped_only_digits.sum(axis=-1, keepdims=True) == 255, inverted_warped_only_digits, frame)
+
+	return result
+
+
+def get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rotation_angle):
+	"""
+	:param digits_grid:
+	:param solution_digits_grid:
+	:param warp_dimensions:
+	:param rotation_angle:
+	:return:
+	"""
+	blank = np.zeros((warp_dimensions[0], warp_dimensions[1], 3), dtype='uint8')
+
+	rotation_angle = rotation_angle % 360
+	digits_grid = np.rot90(digits_grid, rotation_angle / 90)
+	solution_digits_grid = np.rot90(solution_digits_grid, rotation_angle / 90)
+
+	font = cv.FONT_HERSHEY_DUPLEX
+
+	square_height, square_width = warp_dimensions[0] // 9, warp_dimensions[1] // 9
+
+	for y in range(9):
+		for x in range(9):
+			if digits_grid[y, x] != 0:
+				continue
+			text = str(solution_digits_grid[y, x])
+			(text_height, text_width), _ = cv.getTextSize(text, font, fontScale=1, thickness=3)
+			font_scale = 0.6 * min(square_width, square_height) // max(text_width, text_height)
+
+			bottom_left_x = x * square_height + (square_width - text_width) // 2
+			bottom_left_y = y * square_width + (square_height - text_height) // 2
+
+			blank = cv.putText(
+				blank, text, (bottom_left_x, bottom_left_y), font, font_scale, (0, 255, 0),
+				thickness=3, lineType=cv.LINE_AA
+			)
+
+	return blank

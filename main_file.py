@@ -14,17 +14,19 @@ def main():
 	webcam_sudoku_solver = WebcamSudokuSolver(model)
 
 	while webcam.isOpened():
+		# TODO add smooth loop from webcam
 		# successful_frame_read, frame = webcam.read()
 
 		# if not successful_frame_read:
-		# 	break
+			# break
 
 		frame = cv.imread('Fake webcam/1.jpg')
 
 		output_frame = webcam_sudoku_solver.solve(frame)
 
 		cv.imshow('Webcam Sudoku Solver', output_frame)
-		if cv.waitKey(1):
+		# TODO change 0 to maybe 1
+		if cv.waitKey(0):
 			break
 
 	cv.destroyAllWindows()
