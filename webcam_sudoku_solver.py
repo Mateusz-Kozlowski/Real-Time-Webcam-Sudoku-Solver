@@ -37,6 +37,7 @@ class WebcamSudokuSolver:
 		current_attempt = 1
 
 		while current_attempt <= 4:
+			print('First attempt')
 			rotation_angle = self.last_solved_sudoku_rotation + 90 * (current_attempt - 1)
 			rotated_inputs = rotate_inputs(inputs, rotation_angle)
 
