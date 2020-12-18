@@ -1,3 +1,3 @@
-# Webcam-Sudoku-Solver
+# Real-Time-Webcam-Sudoku-Solver
 
 Coming soon!
