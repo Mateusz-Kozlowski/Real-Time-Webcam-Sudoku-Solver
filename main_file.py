@@ -1,9 +1,17 @@
+print('Importing code and libraries from other files...')
+
 from webcam_sudoku_solver import *
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 
 
 def main():
+	# TODO remove all comments or clean code at all
+	# TODO dfs all code and ADD interesting print-logs
+	# TODO also add some comments
+	# TODO add "log" to print statements which are logs
 	webcam_width, webcam_height = 1920, 1080
 	webcam = cv.VideoCapture(0)
 	webcam.set(cv.CAP_PROP_FRAME_WIDTH, webcam_width)
@@ -14,19 +22,16 @@ def main():
 	webcam_sudoku_solver = WebcamSudokuSolver(model)
 
 	while webcam.isOpened():
-		# TODO add smooth loop from webcam
-		# successful_frame_read, frame = webcam.read()
+		successful_frame_read, frame = webcam.read()
 
-		# if not successful_frame_read:
-			# break
-
-		frame = cv.imread('Fake webcam/1.jpg')
+		if not successful_frame_read:
+			break
 
 		output_frame = webcam_sudoku_solver.solve(frame)
 
 		cv.imshow('Webcam Sudoku Solver', output_frame)
-		# TODO change 0 to maybe 1
-		if cv.waitKey(0):
+
+		if cv.waitKey(1) >= 0:
 			break
 
 	cv.destroyAllWindows()

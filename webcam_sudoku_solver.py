@@ -5,7 +5,6 @@ from copy import deepcopy
 import numpy as np
 import cv2 as cv
 from scipy import ndimage
-import matplotlib.pyplot as plt
 
 
 class WebcamSudokuSolver:
@@ -23,6 +22,9 @@ class WebcamSudokuSolver:
 
 		:return:
 		"""
+		if frame is None:
+			return frame
+
 		warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
 
 		if warp_sudoku_board is None:
@@ -33,43 +35,41 @@ class WebcamSudokuSolver:
 		digits_occurrence = check_digits_occurrence(squares)
 
 		inputs = prepare_inputs(squares, digits_occurrence)
+		if inputs is None:
+			return frame
 
 		current_attempt = 1
 
 		while current_attempt <= 4:
-			print('First attempt')
 			rotation_angle = self.last_solved_sudoku_rotation + 90 * (current_attempt - 1)
+
 			rotated_inputs = rotate_inputs(inputs, rotation_angle)
 
 			predictions = self.model.predict([rotated_inputs])
 
-			# TODO choose a value (for example 90%), check on a rotated sudoku, and note on a whiteboard can help
 			if not probabilities_are_good(predictions):
 				current_attempt += 1
 				continue
 
 			digits_grid = get_digits_grid(predictions, digits_occurrence, rotation_angle)
 
-			# print('Digits grid')
-			# for y in digits_grid:
-			# 	for x in y:
-			# 		print(x, end=' ')
-			# 	print()
+			if self.new_sudoku_solution_may_be_last_solution(digits_grid):
+				self.last_solved_sudoku_rotation = rotation_angle
 
-			solved_digits_grid = deepcopy(digits_grid)
-			if self.new_sudoku_solution_may_be_last_solution(solved_digits_grid):
-				# TODO make inverse_warp_digits_on_frame func
-				inverse_warp_digits_on_frame(self.last_sudoku_solution, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle)
-				return frame
+				result = inverse_warp_digits_on_frame(
+					digits_grid, self.last_sudoku_solution, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle
+				)
 
-			if not sudoku_solver.solve_sudoku(solved_digits_grid):
+				return result
+
+			solved_digits_grid = sudoku_solver.solve_sudoku(digits_grid)
+			if solved_digits_grid is None:
 				current_attempt += 1
 				continue
 
-			# TODO maybe deepcopy is not necessary
-			self.last_sudoku_solution = deepcopy(solved_digits_grid)
+			self.last_sudoku_solution = solved_digits_grid
+			self.last_solved_sudoku_rotation = rotation_angle
 
-			# TODO make inverse_warp_digits_on_frame func
 			result = inverse_warp_digits_on_frame(
 				digits_grid, solved_digits_grid, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle
 			)
@@ -147,6 +147,9 @@ def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 
 	warp_matrix = cv.getPerspectiveTransform(pts1, pts2)
 	warp_sudoku_board = cv.warpPerspective(threshold_frame, warp_matrix, (warp_width, warp_height))
+
+	if warp_sudoku_board.shape[0] < 28 * 9 or warp_sudoku_board.shape[1] < 28 * 9:
+		return None, None
 
 	return warp_matrix, warp_sudoku_board
 
@@ -265,11 +268,15 @@ def prepare_inputs(squares, digits_occurrence):
 		for x in y:
 			digits_count += int(x)
 
-	print('digits_count =', digits_count)
+	if digits_count == 0:
+		return None
 
 	cropped_squares_with_digits = get_cropped_squares_with_digits(squares, digits_occurrence)
 
 	digits = get_cropped_digits(cropped_squares_with_digits)
+
+	if digits is None:
+		return None
 
 	resize(digits)
 
@@ -309,19 +316,19 @@ def get_cropped_squares_with_digits(squares, digits_occurrence):
 				binary = deepcopy(cropped_squares_with_digits[-1])
 				_, binary = cv.threshold(binary, 0, 255, cv.THRESH_BINARY)
 
-				while np.sum(binary[0]) >= int(0.9 * 255 * len(binary[0])):
+				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[0]) >= int(0.9 * 255 * len(binary[0])):
 					binary = binary[1:]
 					cropped_squares_with_digits[-1] = cropped_squares_with_digits[-1][1:]
 
-				while np.sum(binary[:, 0]) >= int(0.9 * 255 * len(binary[:, 0])):
+				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[:, 0]) >= int(0.9 * 255 * len(binary[:, 0])):
 					binary = np.delete(binary, 0, 1)
 					cropped_squares_with_digits[-1] = np.delete(cropped_squares_with_digits[-1], 0, 1)
 
-				while np.sum(binary[-1]) >= int(0.9 * 255 * len(binary[-1])):
+				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[-1]) >= int(0.9 * 255 * len(binary[-1])):
 					binary = binary[:-1]
 					cropped_squares_with_digits[-1] = cropped_squares_with_digits[-1][:-1]
 
-				while np.sum(binary[:, -1]) >= int(0.9 * 255 * len(binary[:, -1])):
+				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[:, -1]) >= int(0.9 * 255 * len(binary[:, -1])):
 					binary = np.delete(binary, -1, 1)
 					cropped_squares_with_digits[-1] = np.delete(cropped_squares_with_digits[-1], -1, 1)
 
@@ -338,6 +345,8 @@ def get_cropped_digits(cropped_squares_with_digits, remove_noise=True):
 	digits = list()
 	for i in cropped_squares_with_digits:
 		contours, _ = cv.findContours(i, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+		if len(contours) == 0:
+			return None
 		biggest = max(contours, key=cv.contourArea)
 		digit = deepcopy(i)
 		if remove_noise:
@@ -434,19 +443,23 @@ def rotate_inputs(inputs, rotation_angle):
 	:return:
 	"""
 	rotation_angle = rotation_angle % 360
-	rotated_inputs = deepcopy(inputs)
+
+	if rotation_angle == 0:
+		return deepcopy(inputs)
+
+	rotated_inputs = np.zeros((inputs.shape[0], 28, 28))
 
 	if rotation_angle == 90:
-		for i in range(len(rotated_inputs)):
-			rotated_inputs[i] = cv.rotate(rotated_inputs[i], cv.ROTATE_90_CLOCKWISE)
+		for i in range(len(inputs)):
+			rotated_inputs[i] = cv.rotate(inputs[i], cv.ROTATE_90_CLOCKWISE)
 	elif rotation_angle == 180:
-		for i in range(len(rotated_inputs)):
-			rotated_inputs[i] = cv.rotate(rotated_inputs[i], cv.ROTATE_180)
+		for i in range(len(inputs)):
+			rotated_inputs[i] = cv.rotate(inputs[i], cv.ROTATE_180)
 	elif rotation_angle == 270:
-		for i in range(len(rotated_inputs)):
-			rotated_inputs[i] = cv.rotate(rotated_inputs[i], cv.ROTATE_90_COUNTERCLOCKWISE)
+		for i in range(len(inputs)):
+			rotated_inputs[i] = cv.rotate(inputs[i], cv.ROTATE_90_COUNTERCLOCKWISE)
 
-	return rotated_inputs
+	return rotated_inputs.reshape((inputs.shape[0], 28, 28, 1))
 
 
 def probabilities_are_good(predictions):
@@ -458,9 +471,7 @@ def probabilities_are_good(predictions):
 	for prediction in predictions:
 		average += prediction[np.argmax(prediction)]
 	average = average / len(predictions)
-	print('average =', average)
 	if average < 0.9:
-		print('Average is too small!')
 		return False
 	return True
 
@@ -483,12 +494,12 @@ def get_digits_grid(predictions, digits_occurrence, rotation_angle):
 				if predictions[i][np.argmax(predictions[i])] > 0.5:
 					digits_grid[y, x] = np.argmax(predictions[i])
 				else:
-					print('A digit is strange; probability=', predictions[i][np.argmax(predictions[i])])
+					print('A digit is strange, its probability =', predictions[i][np.argmax(predictions[i])])
 					digits_grid[y, x] = 0
 				i += 1
 
 	if rotation_angle != 0:
-		np.rot90(digits_grid, (360 - rotation_angle) / 90)
+		digits_grid = np.rot90(digits_grid, (360 - rotation_angle) / 90)
 
 	return digits_grid
 
@@ -509,7 +520,7 @@ def inverse_warp_digits_on_frame(digits_grid, solution_digits_grid, frame, warp_
 		only_digits, warp_matrix, (frame.shape[1], frame.shape[0]), flags=cv.WARP_INVERSE_MAP
 	)
 
-	result = np.where(inverted_warped_only_digits.sum(axis=-1, keepdims=True) == 255, inverted_warped_only_digits, frame)
+	result = np.where(inverted_warped_only_digits.sum(axis=-1, keepdims=True) == 355, inverted_warped_only_digits, frame)
 
 	return result
 
@@ -522,30 +533,52 @@ def get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rota
 	:param rotation_angle:
 	:return:
 	"""
+
 	blank = np.zeros((warp_dimensions[0], warp_dimensions[1], 3), dtype='uint8')
 
 	rotation_angle = rotation_angle % 360
 	digits_grid = np.rot90(digits_grid, rotation_angle / 90)
 	solution_digits_grid = np.rot90(solution_digits_grid, rotation_angle / 90)
 
-	font = cv.FONT_HERSHEY_DUPLEX
-
 	square_height, square_width = warp_dimensions[0] // 9, warp_dimensions[1] // 9
+	dimension = min(square_width, square_height)
+
+	digits = np.zeros((9, 9, dimension, dimension, 3), dtype='uint8')
+
+	font = cv.FONT_HERSHEY_DUPLEX
 
 	for y in range(9):
 		for x in range(9):
 			if digits_grid[y, x] != 0:
 				continue
 			text = str(solution_digits_grid[y, x])
-			(text_height, text_width), _ = cv.getTextSize(text, font, fontScale=1, thickness=3)
-			font_scale = 0.6 * min(square_width, square_height) // max(text_width, text_height)
 
-			bottom_left_x = x * square_height + (square_width - text_width) // 2
-			bottom_left_y = y * square_width + (square_height - text_height) // 2
+			scale = dimension / 41
 
-			blank = cv.putText(
-				blank, text, (bottom_left_x, bottom_left_y), font, font_scale, (0, 255, 0),
+			(text_height, text_width), _ = cv.getTextSize(text, font, fontScale=scale, thickness=3)
+
+			bottom_left_x = square_width // 2 - text_width // 2
+			bottom_left_y = square_height // 2 + text_height // 2
+
+			digits[y, x] = cv.putText(
+				digits[y, x], text, (bottom_left_x, bottom_left_y), font, scale, (50, 255, 50),
 				thickness=3, lineType=cv.LINE_AA
 			)
+
+			start_y = y * square_height
+			start_x = x * square_width
+
+			if rotation_angle == 0:
+				temp = digits[y, x]
+				blank[start_y:start_y + dimension, start_x:start_x + dimension] = temp
+			elif rotation_angle == 90:
+				temp = cv.rotate(digits[y, x], cv.ROTATE_90_COUNTERCLOCKWISE)
+				blank[start_y:start_y + dimension, start_x:start_x + dimension] = temp
+			elif rotation_angle == 180:
+				temp = cv.rotate(digits[y, x], cv.ROTATE_180)
+				blank[start_y:start_y + dimension, start_x:start_x + dimension] = temp
+			elif rotation_angle == 270:
+				temp = cv.rotate(digits[y, x], cv.ROTATE_90_CLOCKWISE)
+				blank[start_y:start_y + dimension, start_x:start_x + dimension] = temp
 
 	return blank

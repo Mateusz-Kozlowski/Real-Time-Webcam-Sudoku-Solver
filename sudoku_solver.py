@@ -7,8 +7,7 @@ def solve_sudoku(digits_grid):
 	:return:
 	"""
 	if not is_solvable(digits_grid):
-		print('A sudoku is unsolvable')
-		return False
+		return None
 
 	human_notes = get_full_human_notes(digits_grid)
 
@@ -20,7 +19,9 @@ def solve_sudoku(digits_grid):
 		if not sth_has_changed1 and not sth_has_changed2:
 			break
 
-	return is_solved_correctly(digits_grid)
+	if is_solved_correctly(digits_grid):
+		return digits_grid
+	return None
 
 
 def is_solvable(digits_grid):
@@ -277,46 +278,3 @@ def is_solved_correctly(digits_grid):
 				return False
 
 	return is_solvable(digits_grid)
-
-
-# sudoku1 = [
-# 	[4, 6, 5, 3, 7, 8, 9, 1, 2],
-# 	[8, 1, 9, 5, 6, 2, 4, 7, 3],
-# 	[3, 7, 2, 4, 9, 1, 8, 5, 6],
-# 	[7, 9, 3, 8, 2, 6, 5, 0, 1],
-# 	[6, 2, 1, 7, 5, 4, 3, 9, 0],
-# 	[5, 8, 4, 1, 3, 9, 6, 2, 7],
-# 	[1, 5, 8, 6, 4, 7, 2, 3, 9],
-# 	[9, 4, 7, 2, 8, 3, 1, 6, 5],
-# 	[2, 3, 6, 9, 1, 5, 7, 0, 0]
-# ]
-#
-# sudoku2 = [
-# 	[0, 1, 0, 6, 0, 4, 3, 0, 7],
-# 	[3, 5, 6, 0, 0, 0, 0, 0, 0],
-# 	[0, 0, 0, 0, 5, 3, 6, 9, 0],
-# 	[0, 8, 3, 2, 6, 0, 4, 0, 9],
-# 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
-# 	[4, 0, 5, 0, 7, 8, 2, 6, 0],
-# 	[0, 4, 2, 5, 3, 0, 0, 0, 0],
-# 	[0, 0, 0, 0, 0, 0, 7, 2, 4],
-# 	[7, 0, 9, 4, 0, 2, 0, 8, 0]
-# ]
-#
-# sudoku3 = [
-# 	[4, 0, 0, 0, 0, 0, 0, 1, 0],
-# 	[0, 0, 0, 0, 0, 2, 0, 0, 3],
-# 	[0, 0, 0, 4, 0, 0, 0, 0, 0],
-# 	[0, 0, 0, 0, 0, 0, 5, 0, 0],
-# 	[6, 0, 1, 7, 0, 0, 0, 0, 0],
-# 	[0, 0, 4, 1, 0, 0, 0, 0, 0],
-# 	[0, 5, 0, 0, 0, 0, 2, 0, 0],
-# 	[0, 0, 0, 0, 8, 0, 0, 6, 0],
-# 	[0, 3, 0, 9, 1, 0, 0, 0, 0]
-# ]
-#
-# sudoku0 = np.array(sudoku4)
-#
-# if not solve_sudoku(sudoku0):
-# 	print('Not solved :(')
-# print(sudoku0)
