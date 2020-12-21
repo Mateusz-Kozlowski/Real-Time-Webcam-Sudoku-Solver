@@ -28,6 +28,7 @@ def main():
 	# create the core of the program
 	webcam_sudoku_solver = WebcamSudokuSolver(model)
 
+	print('Logs:')
 	while webcam.isOpened():
 		successful_frame_read, frame = webcam.read()
 
