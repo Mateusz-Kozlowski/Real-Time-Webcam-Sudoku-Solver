@@ -13,12 +13,12 @@ print('Importing code and libraries from other files...')
 from webcam_sudoku_solver import *
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # hide tf warnings
 import tensorflow as tf
 
 
 def main():
-	model = tf.keras.models.load_model('Models/cnn model.h5')
+	model = tf.keras.models.load_model('Models/handwritten cnn.h5')
 
 	webcam_width, webcam_height = 1920, 1080
 	webcam = cv.VideoCapture(0)
