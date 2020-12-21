@@ -18,10 +18,6 @@ import tensorflow as tf
 
 
 def main():
-	# TODO remove all comments or clean code at all
-	# TODO dfs all code and ADD interesting print-logs
-	# TODO also add some comments
-	# TODO add "log" to print statements which are logs
 	model = tf.keras.models.load_model('Models/cnn model.h5')
 
 	webcam_width, webcam_height = 1920, 1080
