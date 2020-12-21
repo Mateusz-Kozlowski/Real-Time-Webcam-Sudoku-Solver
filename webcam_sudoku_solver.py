@@ -1,3 +1,10 @@
+# The core of the program.
+# Contains WebcamSudokuSolver class which contains solve function.
+# The function takes as an argument an image from webcam and returns it with some modifications.
+# On the returned image there are marked 4 vertices of the biggest quadrangle.
+# If the quadrangle is a sudoku board then the function tries to solve it and if the process is successful then
+# the solution is drawn on the returned image.
+
 import sudoku_solver
 
 from copy import deepcopy
@@ -18,28 +25,31 @@ class WebcamSudokuSolver:
 		:param frame:
 			OpenCV image (3D numpy array (rows, columns, color channels)).
 			It has to be either an BGR or a grayscale image.
-			Otherwise an error may occur or the function won't find a board.
-
+			Otherwise an error may occur or the function won't find any board.
 		:return:
+			A copy of a frame with some modifications - vertices of the biggest quadrangle and
+			solution if any is found.
 		"""
 		if frame is None:
 			return frame
+
+		frame = deepcopy(frame)
 
 		warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
 
 		if warp_sudoku_board is None:
 			return frame
 
-		squares = get_squares(warp_sudoku_board)
+		boxes = get_boxes(warp_sudoku_board)
 
-		digits_occurrence = check_digits_occurrence(squares)
+		digits_occurrence = check_digits_occurrence(boxes)
 
-		inputs = prepare_inputs(squares, digits_occurrence)
+		inputs = prepare_inputs(boxes, digits_occurrence)
 		if inputs is None:
 			return frame
 
+		# try to solve a sudoku in every rotation (0, 90, 180 and 270 degrees)
 		current_attempt = 1
-
 		while current_attempt <= 4:
 			rotation_angle = self.last_solved_sudoku_rotation + 90 * (current_attempt - 1)
 
@@ -81,7 +91,9 @@ class WebcamSudokuSolver:
 	def new_sudoku_solution_may_be_last_solution(self, digits_grid):
 		"""
 		:param digits_grid:
+			2D numpy array which contains a sudoku puzzle; if a field is empty then it should contain 0
 		:return:
+			True or False
 		"""
 		if self.last_sudoku_solution is None:
 			return False
@@ -97,8 +109,18 @@ class WebcamSudokuSolver:
 def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 	"""
 	:param frame:
+		OpenCV image (3D numpy array (rows, columns, color channels)).
+		It has to be either an BGR or a grayscale image.
+		Otherwise an error may occur or the function won't find the biggest quadrangle.
+		The argument may be modified depending on the value of second argument.
 	:param draw_vertices_on_frame:
+		Allows to mark vertices of the biggest quadrangle as red circles/dots.
 	:return:
+		warp_matrix which will allow you to "unwarp" cropped sudoku board and
+		warp_sudoku_board which is thresholded, gray, cropped and warped sudoku board;
+		the function may return None, None if there is no external contours or
+		if there is no quadrangle with positive size or
+		if the size of the board is too small (width or height is smaller than 9 * 28 pixels)
 	"""
 	# if the frame contains 3 color channels then it's converted into grayscale
 	if len(frame.shape) == 3:
@@ -109,14 +131,16 @@ def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 	blur_gray_frame = cv.GaussianBlur(gray, (7, 7), 0)
 	threshold_frame = cv.adaptiveThreshold(blur_gray_frame, 255, 1, 1, 11, 2)
 
-	contours, hierarchy = cv.findContours(threshold_frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+	contours, _ = cv.findContours(threshold_frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
 	if len(contours) == 0:
 		return None, None
 
-	vertices = np.array([])  # coordinates of vertices of the biggest quadrangle
-	max_area = 0
+	# coordinates of vertices of the biggest quadrangle
+	vertices = np.array([])
 
+	# find the biggest contour
+	max_area = 0
 	for contour in contours:
 		area = cv.contourArea(contour)
 		perimeter = cv.arcLength(contour, True)
@@ -126,10 +150,12 @@ def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 			vertices = approx
 			max_area = area
 
+	# there is no quadrangle with positive size
 	if vertices.size == 0:
 		return None, None
 
 	vertices = reorder_quadrangle_vertices(vertices)
+
 	warp_width, warp_height = get_quadrangle_dimensions(vertices)
 
 	if draw_vertices_on_frame:
@@ -148,6 +174,7 @@ def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 	warp_matrix = cv.getPerspectiveTransform(pts1, pts2)
 	warp_sudoku_board = cv.warpPerspective(threshold_frame, warp_matrix, (warp_width, warp_height))
 
+	# the size of the board is too small
 	if warp_sudoku_board.shape[0] < 28 * 9 or warp_sudoku_board.shape[1] < 28 * 9:
 		return None, None
 
@@ -157,7 +184,15 @@ def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 def reorder_quadrangle_vertices(vertices):
 	"""
 	:param vertices:
+		A 3D numpy array which contains a coordinates of a quadrangle, it should look like this:
+		[ [[x1, y1]], [[x2, y2]], [[x3, y3]], [[x4, y4]] ].
+		Of course there don't have to be sorted in any order, because it the task of the function to reorder them.
 	:return:
+		Reordered vertices, they'll look like this:
+		D---C
+		|   |
+		A---B
+		[ [[Dx, Dy]], [[Cx, Cy]], [[Bx, By]], [[Ax, Ay]] ].
 	"""
 	vertices = vertices.reshape((4, 2))
 	reordered_vertices = np.zeros((4, 1, 2), dtype=np.int32)
@@ -173,7 +208,13 @@ def reorder_quadrangle_vertices(vertices):
 def get_quadrangle_dimensions(vertices):
 	"""
 	:param vertices:
+		A 3D numpy array which contains a coordinates of a quadrangle, it should look like this:
+		D---C
+		|   |
+		A---B
+		[ [[Dx, Dy]], [[Cx, Cy]], [[Bx, By]], [[Ax, Ay]] ].
 	:return:
+		width, height (which are integers)
 	"""
 	temp = np.zeros((4, 2), dtype=int)
 	for i in range(4):
@@ -201,13 +242,17 @@ def get_quadrangle_dimensions(vertices):
 	return width, height
 
 
-def get_squares(warp_sudoku_board):
+def get_boxes(warp_sudoku_board):
 	"""
+	Splits image into 81 small boxes.
+
 	:param warp_sudoku_board:
+		OpenCV image
 	:return:
+		9x9 2D list; each cell contains 2D numpy array
 	"""
 	temp = [None for i in range(9)]
-	squares = [temp.copy() for i in range(9)]
+	boxes = [temp.copy() for i in range(9)]
 
 	board_height = warp_sudoku_board.shape[0]
 	board_width = warp_sudoku_board.shape[1]
@@ -218,28 +263,28 @@ def get_squares(warp_sudoku_board):
 			x2 = (x + 1) * board_width // 9
 			y1 = y * board_height // 9
 			y2 = (y + 1) * board_height // 9
-			squares[y][x] = warp_sudoku_board[y1:y2, x1:x2]
+			boxes[y][x] = warp_sudoku_board[y1:y2, x1:x2]
 
-	return squares
+	return boxes
 
 
-def check_digits_occurrence(squares):
+def check_digits_occurrence(boxes):
 	"""
-	:param squares:
+	:param boxes:
+		2D list of 81 gray OpenCV images (2D numpy arrays)
 	:return:
+		2D numpy array that contains True or False values that represent occurrence of digits
 	"""
 	digits_occurrence = np.zeros((9, 9), dtype=bool)
 
 	for y in range(9):
 		for x in range(9):
-			square = squares[y][x]
+			height = boxes[y][x].shape[0]
+			width = boxes[y][x].shape[1]
 
-			height = square.shape[0]
-			width = square.shape[1]
+			strongly_cropped_box = boxes[y][x][3 * height // 20:int(0.85 * height), 3 * width // 20:int(0.85 * width)]
 
-			strongly_cropped_square = square[3 * height // 20:int(0.85 * height), 3 * width // 20:int(0.85 * width)]
-
-			contours, hierarchy = cv.findContours(strongly_cropped_square, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+			contours, hierarchy = cv.findContours(strongly_cropped_box, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 			if not contours:
 				continue
 
@@ -249,7 +294,7 @@ def check_digits_occurrence(squares):
 				continue
 
 			x_, y_, w_, h_, = cv.boundingRect(biggest)
-			if h_ < 0.75 * strongly_cropped_square.shape[0] and w_ < 0.75 * strongly_cropped_square.shape[1]:
+			if h_ < 0.75 * strongly_cropped_box.shape[0] and w_ < 0.75 * strongly_cropped_box.shape[1]:
 				continue
 
 			digits_occurrence[y, x] = True
@@ -257,11 +302,17 @@ def check_digits_occurrence(squares):
 	return digits_occurrence
 
 
-def prepare_inputs(squares, digits_occurrence):
+def prepare_inputs(boxes, digits_occurrence):
 	"""
-	:param squares:
+	:param boxes:
+		2D list of 81 gray OpenCV images (2D numpy arrays)
 	:param digits_occurrence:
+		2D numpy array that contains True or False values that represent occurrence of digits
 	:return:
+		if no digit was found returns None;
+		otherwise returns 4D numpy array with shape = (digits count, 28, 28, 1) that
+		contains cropped, scaled and centered digits that are perfectly prepared for a cnn model
+		(at least for this model I created)
 	"""
 	digits_count = 0
 	for y in digits_occurrence:
@@ -271,9 +322,9 @@ def prepare_inputs(squares, digits_occurrence):
 	if digits_count == 0:
 		return None
 
-	cropped_squares_with_digits = get_cropped_squares_with_digits(squares, digits_occurrence)
+	cropped_boxes_with_digits = get_cropped_boxes_with_digits(boxes, digits_occurrence)
 
-	digits = get_cropped_digits(cropped_squares_with_digits)
+	digits = get_cropped_digits(cropped_boxes_with_digits)
 
 	if digits is None:
 		return None
@@ -284,66 +335,77 @@ def prepare_inputs(squares, digits_occurrence):
 
 	center_using_mass_centers(digits)
 
-	digits = digits.reshape(digits.shape[0], 28, 28, 1)
+	digits = digits.reshape((digits.shape[0], 28, 28, 1))
 
 	digits = digits / 255
 
 	return digits
 
 
-def get_cropped_squares_with_digits(squares, digits_occurrence):
+def get_cropped_boxes_with_digits(boxes, digits_occurrence):
 	"""
-	Prepares squares that contains digits to find the biggest EXTERNAL contours by removing white lines from sudoku grid
-	:param squares:
+	Prepares boxes that contains digits to find the biggest EXTERNAL contours by removing white lines from sudoku grid.
+
+	:param boxes:
+		2D list of 81 gray OpenCV images (2D numpy arrays)
 	:param digits_occurrence:
+		2D numpy array that contains True or False values that represent occurrence of digits
 	:return:
+		list of 2D numpy arrays that are cropped boxes that contains digits
 	"""
-	cropped_squares_with_digits = list()
+	cropped_boxes_with_digits = list()
 
 	for y in range(9):
 		for x in range(9):
 			if digits_occurrence[y, x]:
-				height = squares[y][x].shape[0]
-				width = squares[y][x].shape[1]
+				height = boxes[y][x].shape[0]
+				width = boxes[y][x].shape[1]
 
-				cropped_squares_with_digits.append(
-					squares[y][x][
+				cropped_boxes_with_digits.append(
+					boxes[y][x][
 						int(0.05 * height):int(0.95 * height),
 						int(0.05 * width):int(0.95 * width)
 					]
 				)
 
-				binary = deepcopy(cropped_squares_with_digits[-1])
+				# there may be some artifacts (remains of a sudoku grid) that are easy to remove using while loops
+				# (grid and digits are white, background is black)
+
+				binary = deepcopy(cropped_boxes_with_digits[-1])
 				_, binary = cv.threshold(binary, 0, 255, cv.THRESH_BINARY)
 
 				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[0]) >= int(0.9 * 255 * len(binary[0])):
 					binary = binary[1:]
-					cropped_squares_with_digits[-1] = cropped_squares_with_digits[-1][1:]
+					cropped_boxes_with_digits[-1] = cropped_boxes_with_digits[-1][1:]
 
 				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[:, 0]) >= int(0.9 * 255 * len(binary[:, 0])):
 					binary = np.delete(binary, 0, 1)
-					cropped_squares_with_digits[-1] = np.delete(cropped_squares_with_digits[-1], 0, 1)
+					cropped_boxes_with_digits[-1] = np.delete(cropped_boxes_with_digits[-1], 0, 1)
 
 				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[-1]) >= int(0.9 * 255 * len(binary[-1])):
 					binary = binary[:-1]
-					cropped_squares_with_digits[-1] = cropped_squares_with_digits[-1][:-1]
+					cropped_boxes_with_digits[-1] = cropped_boxes_with_digits[-1][:-1]
 
 				while len(binary) > 0 and len(binary[0]) > 0 and np.sum(binary[:, -1]) >= int(0.9 * 255 * len(binary[:, -1])):
 					binary = np.delete(binary, -1, 1)
-					cropped_squares_with_digits[-1] = np.delete(cropped_squares_with_digits[-1], -1, 1)
+					cropped_boxes_with_digits[-1] = np.delete(cropped_boxes_with_digits[-1], -1, 1)
 
-	return cropped_squares_with_digits
+	return cropped_boxes_with_digits
 
 
-def get_cropped_digits(cropped_squares_with_digits, remove_noise=True):
+def get_cropped_digits(cropped_boxes_with_digits, remove_noise=True):
 	"""
 	Crops digits to their bounding rectangles. Also can remove noise.
-	:param cropped_squares_with_digits:
+
+	:param cropped_boxes_with_digits:
+		list of 2D numpy arrays that are cropped boxes that contain digits
 	:param remove_noise:
+		bool variable that allows to remove noises around digits
 	:return:
+		list of 2D numpy arrays that contain perfectly cropped digits (to their bounding rectangles)
 	"""
 	digits = list()
-	for i in cropped_squares_with_digits:
+	for i in cropped_boxes_with_digits:
 		contours, _ = cv.findContours(i, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 		if len(contours) == 0:
 			return None
@@ -361,12 +423,17 @@ def get_cropped_digits(cropped_squares_with_digits, remove_noise=True):
 
 def resize(digits):
 	"""
+	Normalizes digits to fit them in a 20x20 pixel boxes while preserving their aspect ratio.
+
 	:param digits:
+		list of 2D numpy arrays that contain perfectly cropped digits (to their bounding rectangles);
+		original list will be modified
 	:return:
+		None (original list will be modified)
 	"""
-	for index in range(len(digits)):
-		h = digits[index].shape[0]  # height
-		w = digits[index].shape[1]  # width
+	for index, digit in enumerate(digits):
+		h = digit.shape[0]  # height
+		w = digit.shape[1]  # width
 
 		if h > w:
 			factor = 20.0 / h
@@ -377,20 +444,23 @@ def resize(digits):
 			w = 20
 			h = int(round(h * factor))
 
-		digits[index] = cv.resize(digits[index], (w, h), interpolation=cv.INTER_AREA)
+		digits[index] = cv.resize(digit, (w, h), interpolation=cv.INTER_AREA)
 
 
 def add_margins(digits, new_width, new_height):
 	"""
 	:param digits:
+		list of 2D numpy arrays that contain perfectly cropped digits (to their bounding rectangles)
 	:param new_width:
+		total new width
 	:param new_height:
+		total new height
 	:return:
+		3D numpy array with shape = (digits count, new width, new height) and dtype='float32'
 	"""
 	digits_array = np.zeros((len(digits), new_width, new_height), dtype='float32')
 
-	i = 0
-	for digit in digits:
+	for i, digit in enumerate(digits):
 		h = digit.shape[0]  # height
 		w = digit.shape[1]  # width
 
@@ -407,27 +477,30 @@ def add_margins(digits, new_width, new_height):
 			digit, top_margin, bottom_margin, left_margin, right_margin, borderType=cv.BORDER_CONSTANT
 		)
 
-		i += 1
-
 	return digits_array
 
 
 def center_using_mass_centers(digits):
 	"""
 	:param digits:
+		list of 2D numpy arrays that contain perfectly cropped digits (to their bounding rectangles);
+		original list will be modified
 	:return:
+		None (original list will be modified)
 	"""
-	for i in range(len(digits)):
-		shift_x, shift_y = get_best_shift(digits[i])
-		rows, cols = digits[i].shape
+	for i, digit in enumerate(digits):
+		shift_x, shift_y = get_best_shift(digit)
+		rows, cols = digit.shape
 		m = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
-		digits[i] = cv.warpAffine(digits[i], m, (cols, rows))
+		digits[i] = cv.warpAffine(digit, m, (cols, rows))
 
 
 def get_best_shift(img):
 	"""
 	:param img:
+		2D numpy array
 	:return:
+		shift_x, shift_y that are integers
 	"""
 	cy, cx = ndimage.measurements.center_of_mass(img)
 	rows, cols = img.shape
@@ -439,8 +512,12 @@ def get_best_shift(img):
 def rotate_inputs(inputs, rotation_angle):
 	"""
 	:param inputs:
+		Perfectly prepared inputs for a cnn model (at least for this model I created)
 	:param rotation_angle:
+		90 * k, k e Z;
+		inputs will be rotated clockwise
 	:return:
+		rotated inputs copies
 	"""
 	rotation_angle = rotation_angle % 360
 
@@ -450,22 +527,26 @@ def rotate_inputs(inputs, rotation_angle):
 	rotated_inputs = np.zeros((inputs.shape[0], 28, 28))
 
 	if rotation_angle == 90:
-		for i in range(len(inputs)):
-			rotated_inputs[i] = cv.rotate(inputs[i], cv.ROTATE_90_CLOCKWISE)
+		for i, single_input in enumerate(inputs):
+			rotated_inputs[i] = cv.rotate(single_input, cv.ROTATE_90_CLOCKWISE)
 	elif rotation_angle == 180:
-		for i in range(len(inputs)):
-			rotated_inputs[i] = cv.rotate(inputs[i], cv.ROTATE_180)
+		for i, single_input in enumerate(inputs):
+			rotated_inputs[i] = cv.rotate(single_input, cv.ROTATE_180)
 	elif rotation_angle == 270:
-		for i in range(len(inputs)):
-			rotated_inputs[i] = cv.rotate(inputs[i], cv.ROTATE_90_COUNTERCLOCKWISE)
+		for i, single_input in enumerate(inputs):
+			rotated_inputs[i] = cv.rotate(single_input, cv.ROTATE_90_COUNTERCLOCKWISE)
 
 	return rotated_inputs.reshape((inputs.shape[0], 28, 28, 1))
 
 
 def probabilities_are_good(predictions):
 	"""
+	Returns False if average probability < 90%, otherwise True.
+
 	:param predictions:
+		a variable returned by keras models
 	:return:
+		True or False
 	"""
 	average = 0
 	for prediction in predictions:
@@ -479,9 +560,18 @@ def probabilities_are_good(predictions):
 def get_digits_grid(predictions, digits_occurrence, rotation_angle):
 	"""
 	:param predictions:
+		a variable returned by keras models
 	:param digits_occurrence:
+		2D numpy array that contains True or False values that represent occurrence of digits
 	:param rotation_angle:
+		90 * k, k e Z;
+		inputs are rotated clockwise
 	:return:
+		2D numpy array with shape = (9, 9) with dtype=np.uint8 that contains "vertically normalized" digits grid -
+		even if a sudoku in the real life is rotated by 90, 180 or 270 degrees - digits grid won't be rotated;
+		in other words:
+		no matter how a sudoku is rotated, the function will always return a normalized grid;
+		marks empty boxes as 0
 	"""
 	digits_grid = np.zeros((9, 9), np.uint8)
 
@@ -507,19 +597,30 @@ def get_digits_grid(predictions, digits_occurrence, rotation_angle):
 def inverse_warp_digits_on_frame(digits_grid, solution_digits_grid, frame, warp_dimensions, warp_matrix, rotation_angle):
 	"""
 	:param digits_grid:
+		2D numpy array with "vertically normalized" content, requires empty boxes marked as 0
 	:param solution_digits_grid:
+		2D numpy array with "vertically normalized" content
 	:param frame:
+		results will be drawn on the copy of frame
 	:param warp_dimensions:
+		height and width of warped sudoku board
 	:param warp_matrix:
+		an argument that was used to extract warped board from frame
 	:param rotation_angle:
+		90 * k, k e Z;
+		inputs are rotated clockwise
 	:return:
+		result - a copy of a frame with a drawn solution
 	"""
+	# green digits form solution drawn on a black background
 	only_digits = get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rotation_angle)
 
+	# "unwarped" digits
 	inverted_warped_only_digits = cv.warpPerspective(
 		only_digits, warp_matrix, (frame.shape[1], frame.shape[0]), flags=cv.WARP_INVERSE_MAP
 	)
 
+	# merge with frame
 	result = np.where(inverted_warped_only_digits.sum(axis=-1, keepdims=True) == 355, inverted_warped_only_digits, frame)
 
 	return result
@@ -528,10 +629,16 @@ def inverse_warp_digits_on_frame(digits_grid, solution_digits_grid, frame, warp_
 def get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rotation_angle):
 	"""
 	:param digits_grid:
+		2D numpy array with "vertically normalized" content, requires empty boxes marked as 0
 	:param solution_digits_grid:
+		2D numpy array with "vertically normalized" content
 	:param warp_dimensions:
+		height and width of warped sudoku board
 	:param rotation_angle:
+		90 * k, k e Z;
+		inputs are rotated clockwise
 	:return:
+		green digits from solution on a black background
 	"""
 
 	blank = np.zeros((warp_dimensions[0], warp_dimensions[1], 3), dtype='uint8')
@@ -540,8 +647,8 @@ def get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rota
 	digits_grid = np.rot90(digits_grid, rotation_angle / 90)
 	solution_digits_grid = np.rot90(solution_digits_grid, rotation_angle / 90)
 
-	square_height, square_width = warp_dimensions[0] // 9, warp_dimensions[1] // 9
-	dimension = min(square_width, square_height)
+	box_height, box_width = warp_dimensions[0] // 9, warp_dimensions[1] // 9
+	dimension = min(box_width, box_height)
 
 	digits = np.zeros((9, 9, dimension, dimension, 3), dtype='uint8')
 
@@ -557,17 +664,18 @@ def get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rota
 
 			(text_height, text_width), _ = cv.getTextSize(text, font, fontScale=scale, thickness=3)
 
-			bottom_left_x = square_width // 2 - text_width // 2
-			bottom_left_y = square_height // 2 + text_height // 2
+			bottom_left_x = box_width // 2 - text_width // 2
+			bottom_left_y = box_height // 2 + text_height // 2
 
 			digits[y, x] = cv.putText(
 				digits[y, x], text, (bottom_left_x, bottom_left_y), font, scale, (50, 255, 50),
 				thickness=3, lineType=cv.LINE_AA
 			)
 
-			start_y = y * square_height
-			start_x = x * square_width
+			start_y = y * box_height
+			start_x = x * box_width
 
+			# rotate each digit individually
 			if rotation_angle == 0:
 				temp = digits[y, x]
 				blank[start_y:start_y + dimension, start_x:start_x + dimension] = temp
