@@ -3,7 +3,7 @@
 # You absolutely don't need to train any digits recognition model by your own.
 # The program uses by default the one I have trained. It is located in Models folder.
 # If you want to change a path to a model
-# just paste the new one as an argument to load_model function at the very top of the main function.
+# just paste the new one as an argument to load_model function at the very top of main function.
 # The program uses a webcam with id = 0. If you have more than 1 webcam
 # and you want to use different one then you have to change an argument of VideoCapture function to a different number.
 # To exit the program press any key.
