@@ -49,3 +49,4 @@ To-do
 
 
 ## License
+If you want to use my project, please try to contact me somehow.
