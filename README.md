@@ -39,7 +39,7 @@ Python 3.8 with following modules installed:
 
 
 ## Status
-Project is: _finished_, but there are still many things that can be improved:  
+Project is: _finished_, but there are still many things that can be improved:
 * changing the way of locating a sudoku board:  
   currently program tries to find the biggest quadrangle and treats it as a board:
   ```python
