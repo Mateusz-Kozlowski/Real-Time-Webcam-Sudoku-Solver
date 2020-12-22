@@ -40,16 +40,20 @@ If sth doesn't work, then install the version of that library that I proposed.
 
 ## Status
 Project is _finished_, but there are still things that can be improved:
-* changing the way of locating a sudoku board:
+* a way of locating a sudoku board:
 
   currently program tries to find the biggest quadrangle and treats it as a board:
   ```python
-  warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
+  warp_sudoku_board, warp_matrix = get_biggest_quadrangle(frame)
   ```
   but there is a better way to do it - first find linear segments using probabilistic Hough transform
   and then find the biggest quadrangle on an image created from that segments.
   This approach causes the program to find only quadrangles that are also grids.
-* Adding a new CNN model trained on Chars74K dataset (Computer Fonts) instead of MNIST for handwritten digits.
+* a model that classifies the digits:
+
+  the current model is trained 
+  
+  Adding a new CNN model trained on Chars74K dataset (Computer Fonts) instead of MNIST for handwritten digits.
   http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/
 
 ## Contributing
