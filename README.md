@@ -23,7 +23,7 @@ and sth
 
 ## Code requirements
 Python 3.8 with following modules installed:
-* Keras 2.4.3
+* keras 2.4.3
 * matplotlib 3.3.3
 * numpy 1.18.5
 * opencv-python 4.4.0.46
