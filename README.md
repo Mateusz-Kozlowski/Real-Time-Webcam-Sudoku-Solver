@@ -13,7 +13,7 @@
 ## What is Real Time Webcam Sudoku Solver?
 sth
 
--> [(Coming soon!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
+-> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
 
 ## General info
 Add more general information about project. What the purpose of the project is? Motivation?
