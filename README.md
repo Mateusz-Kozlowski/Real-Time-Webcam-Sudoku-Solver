@@ -2,18 +2,21 @@
 
 ## Table of contents
 * [What is Real Time Webcam Sudoku Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
-* [Screenshots](#screenshots)
-* [Technologies](#technologies)
-* [Setup](#setup)
-* [Features](#features)
-* [Status](#status)
-* [Inspiration](#inspiration)
-* [Contact](#contact)
+* [Screenshots](#Screenshots)
+* [Technologies](#Technologies)
+* [Instalation](#Instalation)
+* [Usage](#Usage)
+* [How it works? Precise explanation](#How-it-works?-Precise-explanation)
+* [Status](#Status) status & To-do
+* [Contributing](#Contributing)
+* [Bibliography, inspiration and sources](#Bibliography,-inspiration-and-sources)
+* [License](#License)
 
 ## What is Real Time Webcam Sudoku Solver?
 sth
 
 -> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
+
 
 ## General info
 Add more general information about project. What the purpose of the project is? Motivation?
