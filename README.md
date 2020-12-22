@@ -3,7 +3,7 @@
 ## Table of contents
 * [What is Real Time Webcam Sudoku Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
 * [Screenshots](#Screenshots)
-* [Technologies](#Technologies)
+* [Technologies/Requirements](#Technologies/Requirements)
 * [Instalation](#Instalation)
 * [Usage](#Usage)
 * [How it works? Precise explanation](#How-it-works?-Precise-explanation)
