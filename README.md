@@ -1,7 +1,7 @@
 # Real-Time-Webcam-Sudoku-Solver
 
 ## Table of contents
-* [What is Real-Time-Webcam-Sudoku-Solver](#What-is-Real-Time-Webcam-Sudoku-Solver?)
+* [What is Real-Time-Webcam-Sudoku-Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
 * [Screenshots](#screenshots)
 * [Technologies](#technologies)
 * [Setup](#setup)
