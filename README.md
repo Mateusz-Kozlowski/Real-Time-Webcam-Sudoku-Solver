@@ -22,7 +22,7 @@ Python 3.8 with following modules installed:
 * NumPy 1.18 
 * TensorFlow 2.3 
 * Keras 2.4
-* Matplotlib 3.3 (if you want to train a model by your own)
+* Matplotlib 3.3 (if you want to train a model that recognizes digits by your own)
 * OpenCV 4.4
 
 But other versions of that libraries can also work.
