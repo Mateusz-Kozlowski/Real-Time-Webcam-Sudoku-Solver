@@ -35,7 +35,7 @@ class WebcamSudokuSolver:
 
 		frame = deepcopy(frame)
 
-		warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
+		warp_sudoku_board, warp_matrix = get_biggest_quadrangle(frame)
 
 		if warp_sudoku_board is None:
 			return frame
@@ -178,7 +178,7 @@ def get_biggest_quadrangle(frame, draw_vertices_on_frame=True):
 	if warp_sudoku_board.shape[0] < 28 * 9 or warp_sudoku_board.shape[1] < 28 * 9:
 		return None, None
 
-	return warp_matrix, warp_sudoku_board
+	return warp_sudoku_board, warp_matrix
 
 
 def reorder_quadrangle_vertices(vertices):
