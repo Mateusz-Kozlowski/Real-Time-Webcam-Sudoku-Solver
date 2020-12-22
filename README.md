@@ -46,7 +46,9 @@ Project is: _finished_, but there are still many things that can be improved:
   ```python
   warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
   ```
-  but there is a better way to do it - first 
+  but there is a better way to do it - first find linear segments using probabilistic Hough transform
+  and then find the biggest quadrangle on an image created from that segments.
+  This approach causes the program to find only quadrangles that are also grids. 
 
 
 ## Contributing
