@@ -29,7 +29,7 @@ Python 3.8 with following modules installed:
 * OpenCV 4.4
 * TensorFlow 2.3
 
-But others versions of that libraries can also work.
+But other versions of that libraries can also work.
 If you already have any of those libraries installed first try with your version.
 If sth doesn't work, then install the version of that library that I proposed.
 
