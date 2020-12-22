@@ -23,11 +23,11 @@ and sth
 
 ## Code requirements
 Python 3.8 with following modules installed:
-* keras 2.4.3
-* matplotlib 3.3.3
-* numpy 1.18.5
-* opencv-python 4.4.0.46
-* tensorflow 2.3.1
+* Keras 2.4
+* Matplotlib 3.3
+* NumPy 1.18
+* OpenCV 4.4
+* TensorFlow 2.3
 
 ## Instalation
 
