@@ -11,6 +11,9 @@
 * [Contact](#contact)
 
 ## What is Real Time Webcam Sudoku Solver?
+sth
+
+-> [LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
 
 ## General info
 Add more general information about project. What the purpose of the project is? Motivation?
