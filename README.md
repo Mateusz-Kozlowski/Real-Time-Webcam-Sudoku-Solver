@@ -51,7 +51,7 @@ Project is _finished_, but there are still things that can be improved:
 * a model that classifies digits:
 
   the current model is trained on [MNIST dataset](http://yann.lecun.com/exdb/mnist/).  
-  In order for the program to work on printed sudoku, the model has to be trained on dataset called [Chars74K dataset](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/)
+  In order for the program to work correctly on printed sudoku, the model has to be trained on dataset called [Chars74K dataset] (http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/)
 
 ## Contributing
 
