@@ -1,8 +1,6 @@
 # Real-Time-Webcam-Sudoku-Solver
 
-
-
-### Table of contents
+## Table of contents
 * [General info](#general-info)
 * [Screenshots](#screenshots)
 * [Technologies](#technologies)
@@ -11,6 +9,8 @@
 * [Status](#status)
 * [Inspiration](#inspiration)
 * [Contact](#contact)
+
+## What is Real-Time-Webcam-Sudoku-Solver?
 
 ## General info
 Add more general information about project. What the purpose of the project is? Motivation?
