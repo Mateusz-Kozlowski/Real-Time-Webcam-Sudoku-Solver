@@ -14,8 +14,6 @@
 ## What is Real Time Webcam Sudoku Solver?
 This is a program written in Python that conects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku).
 
-
-
 -> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
 
 ## Code requirements
@@ -50,12 +48,10 @@ Project is _finished_, but there are still things that can be improved:
   but there is a better way to do it - first find linear segments using probabilistic Hough transform
   and then find the biggest quadrangle on an image created from that segments.
   This approach causes the program to find only quadrangles that are also grids.
-* a model that classifies the digits:
+* a model that classifies digits:
 
-  the current model is trained 
-  
-  Adding a new CNN model trained on [Chars74K dataset](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/) (Computer Fonts) 
-  instead of [MNIST](http://yann.lecun.com/exdb/mnist/) for handwritten digits.
+  the current model is trained on [MNIST dataset](http://yann.lecun.com/exdb/mnist/).  
+  In order for the program to work on printed sudoku, the model has to be trained on dataset called [Chars74K dataset](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/)
 
 ## Contributing
 
