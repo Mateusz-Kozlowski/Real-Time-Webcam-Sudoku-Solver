@@ -7,50 +7,42 @@
 * [Instalation](#Instalation)
 * [Usage](#Usage)
 * [How it works? Precise explanation](#How-it-works?-Precise-explanation)
-* [Status](#Status) status & To-do
+* [Status](#Status)
 * [Contributing](#Contributing)
 * [Bibliography, inspiration and sources](#Bibliography,-inspiration-and-sources)
 * [License](#License)
 
 ## What is Real Time Webcam Sudoku Solver?
-sth
+Purposes, motivation ect.
+and sth
 
 -> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
 
-
-## General info
-Add more general information about project. What the purpose of the project is? Motivation?
-
 ## Screenshots
-![Example screenshot](./img/screenshot.png)
+
 
 ## Technologies
 * Tech 1 - version 1.0
 * Tech 2 - version 2.0
 * Tech 3 - version 3.0
 
-## Setup
-Describe how to install / setup your local environement / add link to demo version.
+## Instalation
 
-## Code Examples
-Show examples of usage:
-`put-your-code-here`
 
-## Features
-List of features ready and TODOs for future development
-* Awesome feature 1
-* Awesome feature 2
-* Awesome feature 3
+## Usage
 
-To-do list:
-* Wow improvement to be done 1
-* Wow improvement to be done 2
+
+## How it works? Precise explanation
+
 
 ## Status
 Project is: _in progress_, _finished_, _no longer continue_ and why?
+To-do
 
-## Inspiration
-Add here credits. Project inspired by..., based on...
+## Contributing
 
-## Contact
-Created by [@flynerdpl](https://www.flynerd.pl/) - feel free to contact me!
+
+## Bibliography, inspiration and sources
+
+
+## License
