@@ -39,7 +39,7 @@ If sth doesn't work, then install the version of that library that I proposed.
 
 
 ## Status
-Project is _finished_, but there are still many things that can be improved:
+Project is _finished_, but there are still things that can be improved:
 * changing the way of locating a sudoku board:
 
   currently program tries to find the biggest quadrangle and treats it as a board:
