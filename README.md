@@ -54,8 +54,7 @@ Project is _finished_, but there are still things that can be improved:
 
   the current model is trained 
   
-  Adding a new CNN model trained on Chars74K dataset (Computer Fonts) instead of MNIST for handwritten digits.
-  http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/
+  Adding a new CNN model trained on [Chars74K dataset (Computer Fonts)](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/) instead of MNIST for handwritten digits.
 
 ## Contributing
 
