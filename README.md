@@ -2,8 +2,7 @@
 
 ## Table of contents
 * [What is Real Time Webcam Sudoku Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
-* [Screenshots](#Screenshots)
-* [Technologies/Requirements](#Technologies/Requirements)
+* [Code requirements](#Code-requirements)
 * [Instalation](#Instalation)
 * [Usage](#Usage)
 * [How it works? Precise explanation](#How-it-works?-Precise-explanation)
@@ -18,16 +17,17 @@ and sth
 
 -> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
 
-## Screenshots
-
-
-## Technologies
+## Code requirements
 Python 3.8 with following modules installed:
-* Keras 2.4.3
-* matplotlib 3.3.3
-* numpy 1.18.5
-* opencv-python 4.4.0.46
-* tensorflow 2.3.1
+* Keras 2.4
+* Matplotlib 3.3
+* NumPy 1.18
+* OpenCV 4.4
+* TensorFlow 2.3
+
+But other versions of that libraries can also work.
+If you already have any of those libraries installed first try with your version.
+If sth doesn't work, then install the version of that library that I proposed.
 
 ## Instalation
 
@@ -39,8 +39,18 @@ Python 3.8 with following modules installed:
 
 
 ## Status
-Project is: _in progress_, _finished_, _no longer continue_ and why?
-To-do
+Project is _finished_, but there are still things that can be improved:
+* changing the way of locating a sudoku board:
+
+  currently program tries to find the biggest quadrangle and treats it as a board:
+  ```python
+  warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
+  ```
+  but there is a better way to do it - first find linear segments using probabilistic Hough transform
+  and then find the biggest quadrangle on an image created from that segments.
+  This approach causes the program to find only quadrangles that are also grids.
+* Adding a new CNN model trained on Chars74K dataset (Computer Fonts) instead of MNIST for handwritten digits.
+  http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/
 
 ## Contributing
 
