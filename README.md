@@ -22,9 +22,12 @@ and sth
 
 
 ## Technologies
-* Python - version 3.8. but other
-* Tech 2 - version 2.0
-* Tech 3 - version 3.0
+Python 3.8 with following modules installed:
+* Keras 2.4.3
+* matplotlib 3.3.3
+* numpy 1.18.5
+* opencv-python 4.4.0.46
+* tensorflow 2.3.1
 
 ## Instalation
 
