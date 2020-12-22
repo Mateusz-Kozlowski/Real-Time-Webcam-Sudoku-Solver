@@ -2,7 +2,6 @@
 
 ## Table of contents
 * [What is Real Time Webcam Sudoku Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
-* [Screenshots](#Screenshots)
 * [Code requirements](#Code-requirements)
 * [Instalation](#Instalation)
 * [Usage](#Usage)
@@ -17,9 +16,6 @@ Purposes, motivation ect.
 and sth
 
 -> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
-
-## Screenshots
-
 
 ## Code requirements
 Python 3.8 with following modules installed:
@@ -52,8 +48,9 @@ Project is: _finished_, but there are still many things that can be improved:
   ```
   but there is a better way to do it - first find linear segments using probabilistic Hough transform
   and then find the biggest quadrangle on an image created from that segments.
-  This approach causes the program to find only quadrangles that are also grids. 
-
+  This approach causes the program to find only quadrangles that are also grids.
+* Adding a new CNN model trained on Chars74K dataset (Computer Fonts) instead of MNIST for handwritten digits.
+  http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/
 
 ## Contributing
 
