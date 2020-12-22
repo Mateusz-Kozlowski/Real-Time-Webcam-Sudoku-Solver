@@ -3,7 +3,7 @@
 ## Table of contents
 * [What is Real Time Webcam Sudoku Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
 * [Screenshots](#Screenshots)
-* [Technologies/Requirements](#Technologies/Requirements)
+* [Code requirements](#Code-requirements)
 * [Instalation](#Instalation)
 * [Usage](#Usage)
 * [How it works? Precise explanation](#How-it-works?-Precise-explanation)
@@ -21,7 +21,7 @@ and sth
 ## Screenshots
 
 
-## Technologies
+## Code requirements
 Python 3.8 with following modules installed:
 * Keras 2.4.3
 * matplotlib 3.3.3
