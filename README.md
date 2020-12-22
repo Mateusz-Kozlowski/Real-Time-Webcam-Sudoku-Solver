@@ -12,7 +12,7 @@
 * [License](#License)
 
 ## What is Real Time Webcam Sudoku Solver?
-This is a program written in Python that conects with your webcam and tries to solve a popular puzzle called [sudoku[(https://en.wikipedia.org/wiki/Sudoku).
+This is a program written in Python that conects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku).
 
 
 
