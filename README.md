@@ -44,7 +44,7 @@ Project is: _finished_, but there are still many things that can be improved:
 
   currently program tries to find the biggest quadrangle and treats it as a board:
   ```python
-  x = list()
+  warp_matrix, warp_sudoku_board = get_biggest_quadrangle(frame)
   ```
   but there is a better way to do it - first 
 
