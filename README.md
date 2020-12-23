@@ -12,7 +12,10 @@
 * [License](#License)
 
 ## What is Real Time Webcam Sudoku Solver?
-This is a program written in Python that connects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku).
+This is a program written in Python that connects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku). Of course I'm not the first person which write such a program. 
+I was inspired by [this project](https://github.com/murtazahassan/OpenCV-Sudoku-Solver) that 
+I came across thanks to [this YouTube video](https://youtu.be/qOXDoYUgNlU).
+I recognized that this type of project has great potential and decided to write my own version.
 
 -> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
 
@@ -29,10 +32,17 @@ If you already have any of those libraries installed first try with your version
 If sth doesn't work, then install the version of that library that I proposed.
 
 ## Instalation
-
+Simply download the project as a compressed folder or clone it.
+Then you have to make sure that [Code requirements](#Code-requirements) are met.
+To check for yourself how the program works you don't have to train your CNN model. 
+Already trained is saved in Models folder. 
+Using Terminal/Command Prompt navigate to the correct directory and run main_file.py using the following command: python main_file.py
 
 ## Usage
-
+After running main_file.py you should see a window that shows live feed from your webcam.
+Now place a sudoku in the webcam's field of view.
+And that's all. In the window should appear a solution.
+If the solution doesn't appear, or the program doesn't even locate the sudoku, try to move it closer/further to the webcam. If this doesn't help, you may need to improve the lighting quality.
 
 ## How it works? Precise explanation
 
