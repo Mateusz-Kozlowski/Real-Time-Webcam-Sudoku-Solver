@@ -45,7 +45,7 @@ Project is _finished_, but there are still things that can be improved:
   This approach probably greatly increases the chance of finding a board because
   in each picture there are fewer quadrangles that are also grids than any quadrangles.
   Sudoku boards will almost always be the only grids on the image.
-* Second thing that can be improved is a cnn model that classifies digits. 
+* Second thing that can be improved is a cnn model that classifies digits.  
   The current model is trained on [MNIST dataset](http://yann.lecun.com/exdb/mnist/) but
   if want the program to work correctly on printed sudoku you must use a model trained on 
   [Chars74K dataset](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/).
