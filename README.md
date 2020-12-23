@@ -54,7 +54,7 @@ Project is _finished_, but there are still things that can be improved:
   - apply earlier algorithm (finding the biggest quadrangle) on just created image.
   This approach probably greatly increases the chance of finding a board because
   in each picture there are fewer quadrangles that are also grids than any quadrangles.
-  Sudoku boards will almost always be the only grids on the image.
+  Sudoku board will almost always be the only one grid on an image.
 * Second thing that can be improved is a cnn model that classifies digits.  
   The current model is trained on [MNIST dataset](http://yann.lecun.com/exdb/mnist/) but
   if want the program to work correctly on printed sudoku you have to use a model trained on 
