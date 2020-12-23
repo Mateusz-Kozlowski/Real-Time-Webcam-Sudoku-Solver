@@ -1,3 +1,5 @@
+-> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
+
 # Real-Time-Webcam-Sudoku-Solver
 
 ## Table of contents
@@ -16,8 +18,6 @@ This is a program written in Python that connects with your webcam and tries to 
 I was inspired by [this project](https://github.com/murtazahassan/OpenCV-Sudoku-Solver) that 
 I came across thanks to [this YouTube video](https://youtu.be/qOXDoYUgNlU).
 I recognized that this type of project has great potential and decided to write my own version.
-
--> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS]() <-
 
 ## Code requirements
 Python 3.8 with following modules installed:
