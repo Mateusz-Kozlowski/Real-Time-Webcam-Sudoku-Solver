@@ -39,19 +39,15 @@ If sth doesn't work, then install the version of that library that I proposed.
 
 ## Status
 Project is _finished_, but there are still things that can be improved:
-* a way of locating a sudoku board:
-
-  currently program tries to find the biggest quadrangle and treats it as a board:
-  ```python
-  warp_sudoku_board, warp_matrix = get_biggest_quadrangle(frame)
-  ```
-  but there is a better way to do it - first find linear segments using probabilistic Hough transform
-  and then find the biggest quadrangle on an image created from that segments.
-  This approach causes the program to find only quadrangles that are also grids.
-* a model that classifies digits:
-
-  the current model is trained on [MNIST dataset](http://yann.lecun.com/exdb/mnist/).  
-  In order for the program to work correctly on printed sudoku, the model has to be trained on dataset called [Chars74K dataset] (http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/)
+* a new way of locating a sudoku board that can be described by the following algorithm:
+  - create a binarized image that contains only linear segments that can be found using probabilistic Hough transform;
+  - apply earlier algorithm (finding the biggest quadrangle) on just created image.
+  This approach probably greatly increases the chance of finding a board because
+  in each picture there are fewer quadrangles that are also grids than any quadrangles.
+  Sudoku boards will almost always be the only grids on the image.
+* second thing that can be improved is a cnn model that classifies digits. The current model is trained on [MNIST dataset](http://yann.lecun.com/exdb/mnist/) but
+  if want the program to work correctly on printed sudoku you must use a model trained on 
+  [Chars74K dataset](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/)
 
 ## Contributing
 
