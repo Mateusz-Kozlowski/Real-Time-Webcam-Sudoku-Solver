@@ -9,6 +9,7 @@
 * [Usage](#Usage)
 * [How it works? Precise explanation](#How-it-works?-Precise-explanation)
 * [Status](#Status)
+* [Issues](#Issues)
 * [Contributing](#Contributing)
 * [Bibliography, inspiration and sources](#Bibliography,-inspiration-and-sources)
 * [License](#License)
@@ -251,6 +252,9 @@ Project is _finished_, but there are still things that can be improved:
   The current model is trained on [MNIST dataset](http://yann.lecun.com/exdb/mnist/) but
   if want the program to work correctly on printed sudoku you have to use a model trained on 
   [Chars74K dataset](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/).
+
+## Issues
+
 
 ## Contributing
 
