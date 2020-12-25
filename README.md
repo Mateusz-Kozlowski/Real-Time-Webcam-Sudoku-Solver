@@ -63,7 +63,7 @@ Algorithm:
 	* if an average probability is too low go to the next iteration of the loop
 	* compare the digits with a previous solution
 	* if the digits are part of the previous solution then we don't need to solve sudoku again - break the loop
-	* solve sudoku if it is necessary
+	* try to solve the sudoku
 	* if solved correctly break the loop
 * return a copy of the frame (with a solution if any were found)
 
