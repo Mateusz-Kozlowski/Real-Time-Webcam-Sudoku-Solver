@@ -70,13 +70,15 @@ Algorithm:
 Explanation with code analysis:  
 
 The program runs in main loop in main_file.py. In every iteration of the loop a frame is read from a webcam.
-That frame is passed as an argument to solve function, where everything interesting happens.
+That frame is passed as an argument to solve function - a heart of the program, everything interesting happens there(I'll explain that in a moment).
 The function returns a copy of that frame with a drawn solution. 
 ```python
 output_frame = webcam_sudoku_solver.solve(frame)
 ```
-output_frame is shown and iteration of main loop ends.
-Everything interesting happens in solve function. It is a heart of the program.
+The result is shown and the iteration of main loop ends.
+
+But how does solve function convert a webcam frame into a frame with solution?
+It is a 
 To check how it works we need to move to webcam_sudoku_solver.py.  
 
 First task of the function is to extract a sudoku board. How to do it? 
