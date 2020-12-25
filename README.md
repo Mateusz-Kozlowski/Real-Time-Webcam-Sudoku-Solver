@@ -43,7 +43,7 @@ Using Terminal/Command Prompt navigate to the correct directory and run main_fil
 After running main_file.py you should see a window that shows live feed from your webcam.
 Now place a sudoku in the webcam's field of view.
 And that's all. In the window should appear a solution.
-If the solution doesn't appear, or the program doesn't even locate the sudoku, try to move it closer/further to the webcam. If this doesn't help, you may need to improve the lighting quality.
+If the solution doesn't appear, or the program doesn't even locate the sudoku, try to move it closer/further to the webcam. If it doesn't help, you may need to improve the lighting quality.
 
 ## How it works? Precise explanation
 Algorithm:
