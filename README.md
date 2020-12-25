@@ -58,11 +58,13 @@ Algorithm:
 * extract digits from the boxes that aren't empty
 * prepare the digits for a CNN model
 * while sudoku isn't solved and iterations of the loop <= 4:
+	* rotate inputs by 90 * current iteration degrees
 	* classify the digits using the CNN model
+	* if an average probability is too low go to the next iteration of the loop
 	* compare the digits with a previous solution
-	* if the digits are part of the previous solution then we don't need to solve sudoku again
+	* if the digits are part of the previous solution then we don't need to solve sudoku again - break the loop
 	* solve sudoku if it is necessary
-	* draw solution
+	* if solved correctly break the loop
 * return a copy of the frame (with a solution if any were found)
 
 Explanation with code analysis:  
