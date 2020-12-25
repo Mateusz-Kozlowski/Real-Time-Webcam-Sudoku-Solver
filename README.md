@@ -67,7 +67,7 @@ Algorithm:
 	* if solved correctly break the loop
 * return a copy of the frame (with a solution if any were found)
 
-Explanation with code analysis:    
+Explanation with code analysis:  
 The program runs in main loop in main_file.py. In every iteration of the loop a frame is read from a webcam.
 That frame is passed as an argument to solve function, where everything interesting happens.
 The function returns a copy of that frame with a drawn solution. 
