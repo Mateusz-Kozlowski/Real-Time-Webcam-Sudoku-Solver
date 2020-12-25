@@ -18,7 +18,7 @@ This is a program written in Python that connects with your webcam and tries to 
 I was inspired by [this project](https://github.com/murtazahassan/OpenCV-Sudoku-Solver) that 
 I came across thanks to [this YouTube video](https://youtu.be/qOXDoYUgNlU).
 I recognized that this type of project has a great potential and decided to write my own version.
-I will mention more about the sources I used at the end.
+At the end I will mention more about the sources I used.
 
 ## Code requirements
 Python 3.8 with following modules installed:
