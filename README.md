@@ -9,7 +9,6 @@
 * [Usage](#Usage)
 * [How it works? Precise explanation](#How-it-works?-Precise-explanation)
 * [Status](#Status)
-* [Issues](#Issues)
 * [Contributing](#Contributing)
 * [Bibliography, inspiration and sources](#Bibliography,-inspiration-and-sources)
 * [License](#License)
@@ -18,7 +17,8 @@
 This is a program written in Python that connects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku). Of course I'm not the first person which write such a program. 
 I was inspired by [this project](https://github.com/murtazahassan/OpenCV-Sudoku-Solver) that 
 I came across thanks to [this YouTube video](https://youtu.be/qOXDoYUgNlU).
-I recognized that this type of project has great potential and decided to write my own version.
+I recognized that this type of project has a great potential and decided to write my own version.
+I will mention more about the sources I used at the end.
 
 ## Code requirements
 Python 3.8 with following modules installed:
@@ -46,6 +46,26 @@ And that's all. In the window should appear a solution.
 If the solution doesn't appear, or the program doesn't even locate the sudoku, try to move it closer/further to the webcam. If this doesn't help, you may need to improve the lighting quality.
 
 ## How it works? Precise explanation
+Algorithm:
+* read a frame from a webcam
+* convert the frame into grayscale
+* binarize the frame
+* find all external contours
+* get the biggest quadrangle from that contours
+* apply warp transform (bird eye view) on the quadrangle
+* split the quadrangle into 81 small boxes
+* check which boxes contain digits
+* extract digits from the boxes that aren't empty
+* prepare the digits for a CNN model
+* while sudoku isn't solved and iterations of the loop <= 4:
+	* classify the digits using the CNN model
+	* compare the digits with a previous solution
+	* if the digits are part of the previous solution then we don't need to solve sudoku again
+	* solve sudoku if it is necessary
+	* draw solution
+* return a copy of the frame (with a solution if any were found)
+
+Explanation with code analysis:  
 The program runs in main loop in main_file.py. In every iteration of the loop a frame is read from a webcam.
 That frame is passed as an argument to solve function, where everything interesting happens.
 The function returns a copy of that frame with a drawn solution. 
@@ -253,14 +273,33 @@ Project is _finished_, but there are still things that can be improved:
   if want the program to work correctly on printed sudoku you have to use a model trained on 
   [Chars74K dataset](http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/).
 
-## Issues
-
-
 ## Contributing
-
+Feel free to contribute to this project.
+How to do it?
+(Even I'm not sure because I have never contributed to any project),
+but I guess the best way to do it is:
+* Fork the repo on GitHub
+* Clone the project to your own machine
+* Commit changes to your own branch
+* Push your work back up to your fork
+* Submit a Pull request so that I can review your changes
+NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
 ## Bibliography, inspiration and sources
+As I wrote before, I was inspired by [this project](https://github.com/murtazahassan/OpenCV-Sudoku-Solver).
+To master the basics of OpenCV library I watched a [tutorial](https://youtu.be/WQeoO7MI0Bs) 
+that is also made by that guy.
+Then I started looking for other augmented reality/webcam sudoku solving projects.
+Many of them had very nice features, but none were perfect.
+The following deserve special mention:
+https://youtu.be/QR66rMS_ZfA  
 
+https://youtu.be/uUtw6Syic6A
+https://github.com/anhminhtran235/real_time_sudoku_solver
+
+Even though my project may seem at first glance just a combination of the best features of those mentioned above, creating it was not a trivial task. It took me more than 1 month (at least 100 hours).
+The most engaging was to come up with a better way to extract digits from a board for the neural network that would work for any sudoku - both those with large and small digits and both those with thick and thin grids.
+But the most important thing is that while writing this project I learned LOTS OF new things.
 
 ## License
-If you want to use my project, please try to contact me somehow.
+At least mention me in your README.
