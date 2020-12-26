@@ -154,14 +154,14 @@ if warp_sudoku_board is None:
 ```
 As you can see if the function won't solve a sudoku it will return an unchaged copy of a frame.  
 
-Next step is to split the board into 81 boxes.
+Next step is to split that board into 81 boxes.
 ```python
 boxes = get_boxes(warp_sudoku_board)
 ```
 
-When a box is empty and when a box contains a digit?  
+When is a box empty and when does a box contain a digit?  
 This is a very good question.
-Using the trial and error technique, I developed the following algorithm:
+Using trial and error technique, I developed the following algorithm:
 * copy a box
 * crop that copy on each side by 15%
 * find all external contours
@@ -238,7 +238,7 @@ rotation_angle = self.last_solved_sudoku_rotation + 90 * (current_attempt - 1)
 rotated_inputs = rotate_inputs(inputs, rotation_angle)
 ```
 
-Now that CNN model can predict.
+Now a CNN model can predict.
 ```python
 predictions = self.model.predict([rotated_inputs])
 ```
@@ -256,14 +256,14 @@ If an average probability is high enought we can get a grid with recognized digi
 digits_grid = get_digits_grid(predictions, digits_occurrence, rotation_angle)
 ```
 
-This function always returns a "vertically normalized" grid - it always can be compared with a previous grid, regardless of their rotation.  
+This function always returns a "vertically normalized" grid - it always can be compared with the previous solution, regardless of their rotation.  
 
-Comparing the current grid with a previous:
+Comparing the current grid with the previous solution:
 ```python
 if self.new_sudoku_solution_may_be_last_solution(digits_grid):
 ```
 
-If this grid solution can be equal to a previous we don't have to solve the current sudoku at all.
+If a solution of the current grid can be equal to the previous solution we don't have to solve the current sudoku at all.
 ```python
 if self.new_sudoku_solution_may_be_last_solution(digits_grid):
 	self.last_solved_sudoku_rotation = rotation_angle
@@ -287,13 +287,13 @@ if solved_digits_grid is None:
 	continue
 ```
 
-But if that sudoku has been solved correctly we overwrite a previous solution.
+But if that sudoku has been solved correctly we overwrite the previous solution.
 ```python
 self.last_sudoku_solution = solved_digits_grid
 self.last_solved_sudoku_rotation = rotation_angle
 ```
 
-Draw the solution on a copy of the current frame and return it.
+Draw the current solution on a copy of the current frame and return it.
 ```python
 result = inverse_warp_digits_on_frame(
 	digits_grid, solved_digits_grid, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle
@@ -306,28 +306,32 @@ If we couldn't find any solution of the sudoku in any rotation, we return the im
 ```python
 return frame
 ```
-And this is how solve function works, if you are curious about how the utilities-functions that were called and
-did a lot of nice things then check their definitions and descriptions which are located in webcam_sudoku_solver.py file below WebcamSudokuSolver class.
+And this is how solve function works.  
+If you are curious about utilities-functions that are called by solve function and does a nice job then check their definitions and descriptions which are located in webcam_sudoku_solver.py file below WebcamSudokuSolver class.
 
-But there is also one more point to be discussed. How does solve function solve a sudoku puzzle?
+But there is also one more point to be discussed:  
+How does solve_sudoku function solve a sudoku puzzle?
 ```python
 solved_digits_grid = sudoku_solver.solve_sudoku(digits_grid)
 ```
+
 To check how it works we need to move to sudoku_solver.py.
 This file will be discussed in exactly the same way as the previous one -
-I will discuss in detail only an externally called function.
-The whole algorithm starts and ends in solve_sudoku function.
+I will discuss in detail only an externally called function
+where the whole algorithm starts and ends.  
+
 First we need to check if a sudoku is solvable at all. 
 ```python
 if not is_solvable(digits_grid):
 	return None
 ```
+
 The algorithm is based on pencilmarks that we use to help ourself solve sudoku in real life.  
-I called it human_notes.
+I called them human_notes.
 ```python
 human_notes = get_full_human_notes(digits_grid)
 ```
-Sudoku is solved in a loop.
+A sudoku is solved in a loop.
 ```python
 while True:
 	sth_has_changed1 = remove_orphans_technique(digits_grid, human_notes)
@@ -338,15 +342,16 @@ while True:
 		break
 ```
 Each iteration of the loop calls two functions: remove_orphans_technique and single_appearances_technique.
-Their task is to successively delete unnecessary notes and complete the sudoku.
-The loops ends when the functions doesn't change anything anymore. It means the sudoku is solved or can't be solved using this technique.  
-After the loop we check if the sudoku is solved correctly (so we check also if is solved at all).
+Their task is to successively delete unnecessary notes and complete a sudoku.
+The loop ends when the functions doesn't change anything anymore. It means the sudoku is solved or can't be solved using this technique.  
+After the loop we check if that sudoku is solved correctly (so we check also if is solved at all).
 ```python
 if is_solved_correctly(digits_grid):
 	return digits_grid
 return None
 ```
-Note that a very popular technique for solving sudoku is backtracking algorithm, but the program didn't use it because it works too slowly on more difficult puzzles. However it has one advantage - can solve sudoku with more than one solution. My algorithm can't do it, because it is an ambigous case. The loop will break because those 2 functions inside it can change only obvious digits.
+
+There is a very popular technique for solving sudoku called backtracking algorithm. I didn't choose that technique because it works too slowly on more difficult puzzles. However, it has one advantage - can solve sudoku with more than one solution. My algorithm can't do it, because it is an ambigous case.
 
 ## Status
 Project is _finished_, but there are still things that can be improved:
@@ -364,13 +369,14 @@ Project is _finished_, but there are still things that can be improved:
 ## Contributing
 Feel free to contribute to this project.
 How to do it?
-(Even I'm not sure because I have never contributed to any project),
+(Even I am not sure because I have never contributed to any project),
 but I guess the best way to do it is:
-* Fork the repo on GitHub
+* Fork this repo on GitHub
 * Clone the project to your own machine
 * Commit changes to your own branch
 * Push your work back up to your fork
-* Submit a Pull request so that I can review your changes
+* Submit pull request so that I can review your changes  
+
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
 ## Bibliography, inspiration and sources
@@ -378,16 +384,19 @@ As I wrote before, I was inspired by [this project](https://github.com/murtazaha
 To master the basics of OpenCV library I watched a [tutorial](https://youtu.be/WQeoO7MI0Bs) 
 that is also made by that guy.
 Then I started looking for other augmented reality/webcam sudoku solving projects.
-Many of them had very nice features, but none were perfect.
-The following deserve special mention:
-https://youtu.be/QR66rMS_ZfA  
+Many of them had very nice features, but none was perfect.
+The following projects deserve a special mention:  
+* https://youtu.be/QR66rMS_ZfA  
 
-https://youtu.be/uUtw6Syic6A
+* https://youtu.be/uUtw6Syic6A  
 https://github.com/anhminhtran235/real_time_sudoku_solver
 
 Even though my project may seem at first glance just a combination of the best features of those mentioned above, creating it was not a trivial task. It took me more than 1 month (at least 100 hours).
 The most engaging was to come up with a better way to extract digits from a board for the neural network that would work for any sudoku - both those with large and small digits and both those with thick and thin grids.
-But the most important thing is that while writing this project I learned LOTS OF new things.
+Another difficult task was the implementation of solving rotated sudoku.  
+But what I am most proud of is something that is imperceptible at first glance - my own sudoku puzzle algorithm, which I have unconsciously developed over the past few years. Its implementation was a very interesting experience.  
+
+But THE MOST IMPORTANT thing is that while writing this project I learned A LOT OF new things.
 
 ## License
-At least mention me in your README.
+I would be very grateful if you mention my project in your readme, if it was an inspiration for you.
