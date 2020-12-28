@@ -621,7 +621,7 @@ def inverse_warp_digits_on_frame(digits_grid, solution_digits_grid, frame, warp_
 	)
 
 	# merge with frame
-	result = np.where(inverted_warped_only_digits.sum(axis=-1, keepdims=True) == 355, inverted_warped_only_digits, frame)
+	result = np.where(inverted_warped_only_digits.sum(axis=-1, keepdims=True) == 200, inverted_warped_only_digits, frame)
 
 	return result
 
@@ -668,7 +668,7 @@ def get_only_digits_img(digits_grid, solution_digits_grid, warp_dimensions, rota
 			bottom_left_y = box_height // 2 + text_height // 2
 
 			digits[y, x] = cv.putText(
-				digits[y, x], text, (bottom_left_x, bottom_left_y), font, scale, (50, 255, 50),
+				digits[y, x], text, (bottom_left_x, bottom_left_y), font, scale, (0, 200, 0),
 				thickness=3, lineType=cv.LINE_AA
 			)
 
