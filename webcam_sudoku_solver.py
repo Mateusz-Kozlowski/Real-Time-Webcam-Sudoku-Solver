@@ -40,6 +40,9 @@ class WebcamSudokuSolver:
 		if warp_sudoku_board is None:
 			return frame
 
+		cv.imshow('warp_sudoku_board', warp_sudoku_board)
+		cv.waitKey(0)
+
 		boxes = get_boxes(warp_sudoku_board)
 
 		digits_occurrence = check_digits_occurrence(boxes)
@@ -48,12 +51,18 @@ class WebcamSudokuSolver:
 		if inputs is None:
 			return frame
 
+		cv.imshow('inputs[0]', inputs[0])
+		cv.waitKey(0)
+
 		# try to solve a sudoku in every rotation (0, 90, 180 and 270 degrees)
 		current_attempt = 1
 		while current_attempt <= 4:
 			rotation_angle = self.last_solved_sudoku_rotation + 90 * (current_attempt - 1)
 
 			rotated_inputs = rotate_inputs(inputs, rotation_angle)
+
+			cv.imshow('rotated_inputs[0]', rotated_inputs[0])
+			cv.waitKey(0)
 
 			predictions = self.model.predict([rotated_inputs])
 
@@ -69,6 +78,9 @@ class WebcamSudokuSolver:
 				result = inverse_warp_digits_on_frame(
 					digits_grid, self.last_sudoku_solution, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle
 				)
+
+				cv.imshow('result', result)
+				cv.waitKey(0)
 
 				return result
 
