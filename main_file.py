@@ -32,9 +32,6 @@ def main():
 	while webcam.isOpened():
 		successful_frame_read, frame = webcam.read()
 
-		cv.imshow('Pure frame', frame)
-		cv.waitKey(0)
-
 		if not successful_frame_read:
 			break
 
@@ -47,12 +44,6 @@ def main():
 		# check if a user has pressed a key, if so, close the program
 		if cv.waitKey(1) >= 0:
 			break
-
-		print('It is time for the next frame')
-		cv.waitKey(0)
-		cv.waitKey(0)
-
-		cv.destroyAllWindows()
 
 	cv.destroyAllWindows()
 	webcam.release()
