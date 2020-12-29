@@ -301,17 +301,18 @@ self.last_sudoku_solution = solved_digits_grid
 self.last_solved_sudoku_rotation = rotation_angle
 ```
 
-Draw the current solution on a copy of the current frame and return it.
+Draw the current solution on a copy of the current frame and return it.  
+
+![output_frame](Screenshots/output_frame.png)  
+
+
 ```python
 result = inverse_warp_digits_on_frame(
 	digits_grid, solved_digits_grid, frame, warp_sudoku_board.shape, warp_matrix, rotation_angle
 )
 
 return result
-```  
-
-![output_frame](Screenshots/output_frame.png)  
-
+```
 
 If we couldn't find any solution of the sudoku in any rotation, we return the image without a solution.
 ```python
