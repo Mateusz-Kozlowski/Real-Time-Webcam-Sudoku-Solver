@@ -99,8 +99,8 @@ We'll use there a object of WebcamSudokuSolver class - the core of the program.
 webcam_sudoku_solver = WebcamSudokuSolver(model)
 ```
 
-At the beginning of each iteration of main loop a frame is read from a webcam.
-![pure_frame](Screenshots/pure_frame.png)
+At the beginning of each iteration of main loop a frame is read from a webcam.  
+![pure_frame](Screenshots/pure_frame.png)  
 Then that frame is passed as an argument to the object of WebcamSudokuSolver class using solve function.  
 The function returns a copy of that frame (with a drawn solution if any has been found).  
 How does solve function convert a webcam frame into a frame with solution? I'll explain it in a moment.
@@ -137,8 +137,8 @@ But how does solve function convert a webcam frame into a frame with solution?
 
 To answer this question we have to move to webcam_sudoku_solver.py file. 
 
-First task of the function is to extract a sudoku board.
-![warp_sudoku_board](Screenshots/warp_sudoku_board.png)
+First task of the function is to extract a sudoku board.  
+![warp_sudoku_board](Screenshots/warp_sudoku_board.png)  
 We can treat a sudoku board as the biggest quadrangle in a frame.
 I'm not going to explain how get_biggest_quadrangle function exactly works,  
 but if you are curious about this, you can check this out by your own.
@@ -302,8 +302,8 @@ result = inverse_warp_digits_on_frame(
 )
 
 return result
-```
-![output_frame](Screenshots/output_frame.png)
+```  
+![output_frame](Screenshots/output_frame.png)  
 
 If we couldn't find any solution of the sudoku in any rotation, we return the image without a solution.
 ```python
