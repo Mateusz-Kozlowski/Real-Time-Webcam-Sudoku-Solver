@@ -1,4 +1,4 @@
--> [(COMING SOON!) LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS](Screenshots/2020-12-27-22-05-38.mp4) <-
+-> [LINK TO A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS](https://drive.google.com/file/d/1hQUiYHpJQpClfQFXCh4waUWeijJky7jv/view?usp=sharing) <-
 
 # Real-Time-Webcam-Sudoku-Solver
 
