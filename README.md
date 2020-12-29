@@ -7,7 +7,7 @@
 * [Code requirements](#Code-requirements)
 * [Instalation](#Instalation)
 * [Usage](#Usage)
-* [How it works?](#How-it-works?)
+* [How-does-it-work?](#How-does-it-work?)
 * [Status](#Status)
 * [Contributing](#Contributing)
 * [Bibliography, inspiration and sources](#Bibliography,-inspiration-and-sources)
@@ -45,7 +45,7 @@ Now place a sudoku in the webcam's field of view.
 And that's all. In the window should appear a solution.
 If the solution doesn't appear, or the program doesn't even locate the sudoku, try to move it closer/further to the webcam. If it doesn't help, you may need to improve the lighting quality.
 
-## How it works?
+## How-does-it-work?
 Short explanation - algorithm:
 * read a frame from a webcam
 * convert that frame into grayscale
