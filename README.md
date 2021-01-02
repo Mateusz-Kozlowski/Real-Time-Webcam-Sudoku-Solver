@@ -5,7 +5,7 @@
 ## Table of contents
 * [What is Real Time Webcam Sudoku Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
 * [Code requirements](#Code-requirements)
-* [Instalation](#Instalation)
+* [Installation](#Installation)
 * [Usage](#Usage)
 * [How does it work?](#How-does-it-work?)
 * [Status](#Status)
@@ -32,7 +32,7 @@ But other versions of that libraries can also work.
 If you already have any of those libraries installed first try with your version.
 If sth doesn't work, then install the version of that library that I proposed.
 
-## Instalation
+## Installation
 Simply download the project as a compressed folder or clone it.
 Then you have to make sure that [Code requirements](#Code-requirements) are met.
 To check for yourself how the program works you don't have to train your CNN model. 
