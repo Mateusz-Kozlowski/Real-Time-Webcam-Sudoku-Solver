@@ -14,7 +14,7 @@
 * [License](#License)
 
 ## What is Real Time Webcam Sudoku Solver?
-This is a program written in Python that connects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku). Of course I'm not the first person which write such a program. 
+This is a program written in Python that connects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku). Of course I'm not the first person which wrote such a program. 
 I was inspired by [this project](https://github.com/murtazahassan/OpenCV-Sudoku-Solver) that 
 I came across thanks to [this YouTube video](https://youtu.be/qOXDoYUgNlU).
 I recognized that this type of project has a great potential and decided to write my own version.
@@ -25,18 +25,18 @@ Python 3.8 with following modules installed:
 * NumPy 1.18 
 * TensorFlow 2.3 
 * Keras 2.4
-* Matplotlib 3.3 (if you want to train a model that recognizes digits by your own)
+* Matplotlib 3.3 (if you want to train a model that recognizes digits on your own)
 * OpenCV 4.4
 
-But other versions of that libraries can also work.
-If you already have any of those libraries installed first try with your version.
-If sth doesn't work, then install the version of that library that I proposed.
+Other versions of that libraries can also work.
+If you already have any of those libraries installed try with those versions.
+If sth doesn't work, then install the versions that I proposed.
 
 ## Installation
 Simply download the project as a compressed folder or clone it.
 Then you have to make sure that [Code requirements](#Code-requirements) are met.
-To check for yourself how the program works you don't have to train your CNN model. 
-Already trained is saved in Models folder. 
+In order to run the program you don't have to train your own AI model. 
+Already trained one is saved in Models folder. 
 Using Terminal/Command Prompt navigate to the correct directory and run main_file.py using the following command: python main_file.py
 
 ## Usage
@@ -70,7 +70,7 @@ Short explanation - algorithm:
 Precise explanation - code analysis:  
 
 As I said before, the program starts in main_file.py.  
-First of all we have to import a source code and libraries from other files.
+First of all we have to import the source code and some libraries from other files.
 ```python
 print('Importing a source code and libraries from other files...')
 
@@ -81,7 +81,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # hide tf warnings
 import tensorflow as tf
 ```
 
-Then main function can start.  
+Then main function starts.  
 First task of the function is to prepare a CNN model and a webcam.
 ```python
 model = tf.keras.models.load_model('Models/handwritten_cnn.h5')
@@ -92,7 +92,7 @@ webcam.set(cv.CAP_PROP_FRAME_WIDTH, webcam_width)
 webcam.set(cv.CAP_PROP_FRAME_HEIGHT, webcam_height)
 ```
 
-Now main loop of the program can start.  
+Now main loop of the program starts.  
 We'll use there a object of WebcamSudokuSolver class - the core of the program.  
 ```python
 # create the core of the program
@@ -140,14 +140,14 @@ But how does solve function convert a webcam frame into a frame with solution?
 
 To answer this question we have to move to webcam_sudoku_solver.py file. 
 
-First task of the function is to extract a sudoku board.  
+First task of the function is to extract a sudoku board.
 
 ![warp_sudoku_board](Screenshots/warp_sudoku_board.png)  
 
 
-We can treat a sudoku board as the biggest quadrangle in a frame.
-I'm not going to explain how get_biggest_quadrangle function exactly works,  
-but if you are curious about this, you can check this out by your own.
+The program assumes that a sudoku board as the biggest quadrangle in a frame.
+I'm not going to explain how get_biggest_quadrangle function exactly works,
+but if you are curious about this, you can check this out by yourself.
 All functions that I won't discuss in detail are defined under WebcamSudokuSolver class.
 ```python
 if frame is None:
@@ -160,16 +160,15 @@ warp_sudoku_board, warp_matrix = get_biggest_quadrangle(frame)
 if warp_sudoku_board is None:
 	return frame
 ```
-As you can see if the function won't solve a sudoku it will return an unchaged copy of a frame.  
+As you can see if the function won't solve the sudoku then it will return an unchaged copy of the frame.  
 
 Next step is to split that board into 81 boxes.
 ```python
 boxes = get_boxes(warp_sudoku_board)
 ```
 
-When is a box empty and when does a box contain a digit?  
-This is a very good question.
-Using trial and error technique, I developed the following algorithm:
+When is a box empty and when does a box contain a digit?
+Using trials and errors technique, I developed the following algorithm:
 * copy a box
 * crop that copy on each side by 15%
 * find all external contours
@@ -251,20 +250,20 @@ Now a CNN model can predict.
 predictions = self.model.predict([rotated_inputs])
 ```
 
-If an average probability isn't good it means the current rotation isn't correct. We can skip to the next iteration.  
-Notice that if it is 4th iteration then the function won't solve a sudoku and will return a copy of a frame without any changes.  
+If an average probability isn't high enough it means the current rotation isn't correct. We can skip to the next iteration.  
+Notice that if it is 4th iteration then the function won't solve the sudoku and will return a copy of the frame without any changes. 
 ```python
 if not probabilities_are_good(predictions):
 	current_attempt += 1
 	continue
 ```
 
-If an average probability is high enought we can get a grid with recognized digits.
+If an average probability is high enough we can get a grid with recognized digits.
 ```python
 digits_grid = get_digits_grid(predictions, digits_occurrence, rotation_angle)
 ```
 
-This function always returns a "vertically normalized" grid - it always can be compared with the previous solution, regardless of their rotation.  
+This function always returns a "vertically normalized" grid so it always can be compared with the previous solution, regardless of their rotation.  
 
 Comparing the current grid with the previous solution:
 ```python
@@ -314,12 +313,12 @@ result = inverse_warp_digits_on_frame(
 return result
 ```
 
-If we couldn't find any solution of the sudoku in any rotation, we return the image without a solution.
+If we couldn't find any solution of the sudoku in any rotation, we return the image without any solution.
 ```python
 return frame
 ```
 And this is how solve function works.  
-If you are curious about utilities-functions that are called by solve function and does a nice job then check their definitions and descriptions which are located in webcam_sudoku_solver.py file below WebcamSudokuSolver class.
+If you are curious about utilities-functions that are called by solve function then check their definitions and descriptions which are located in webcam_sudoku_solver.py file below WebcamSudokuSolver class.
 
 But there is also one more point to be discussed:  
 How does solve_sudoku function solve a sudoku puzzle?
@@ -332,7 +331,7 @@ This file will be discussed in exactly the same way as the previous one -
 I will discuss in detail only an externally called function
 where the whole algorithm starts and ends.  
 
-First we need to check if a sudoku is solvable at all. 
+First we need to check if the sudoku is solvable at all. 
 ```python
 if not is_solvable(digits_grid):
 	return None
@@ -343,7 +342,7 @@ I called them human_notes.
 ```python
 human_notes = get_full_human_notes(digits_grid)
 ```
-A sudoku is solved in a loop.
+The sudoku is solved in a loop.
 ```python
 while True:
 	sth_has_changed1 = remove_orphans_technique(digits_grid, human_notes)
@@ -354,7 +353,7 @@ while True:
 		break
 ```
 Each iteration of the loop calls two functions: remove_orphans_technique and single_appearances_technique.
-Their task is to successively delete unnecessary notes and complete a sudoku.
+Their task is to successively delete unnecessary notes and complete the sudoku.
 The loop ends when the functions doesn't change anything anymore. It means the sudoku is solved or can't be solved using this technique.  
 After the loop we check if that sudoku is solved correctly (so we check also if is solved at all).
 ```python
@@ -364,9 +363,12 @@ return None
 ```
 
 There is a very popular technique for solving sudoku called backtracking algorithm. I didn't choose that technique because it works too slowly on more difficult puzzles. However, it has one advantage - can solve sudoku with more than one solution. My algorithm can't do it, because it is an ambigous case.
+I have an idea how to integrate the second algorithm with the project - multithreading.
+Solve function can try to solve the sudoku using those 2 techniques at the same time and 
+if one of them succeeds then the function ends. But it's only an idea. Perhaps some day I will implement it.
 
 ## Status
-Project is _finished_, but there are still things that can be improved:
+Project is _finished_, but there are still some things that can be improved:
 * a new way of locating a sudoku board that can be described by the following algorithm:
   - create a binarized image that contains only linear segments that can be found using probabilistic Hough transform;
   - apply earlier algorithm (finding the biggest quadrangle) on just created image.
@@ -387,7 +389,7 @@ but I guess the best way to do it is:
 * Clone the project to your own machine
 * Commit changes to your own branch
 * Push your work back up to your fork
-* Submit pull request so that I can review your changes  
+* Submit pull request so that I can review your changes 
 
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
@@ -396,17 +398,18 @@ As I wrote before, I was inspired by [this project](https://github.com/murtazaha
 To master the basics of OpenCV library I watched a [tutorial](https://youtu.be/WQeoO7MI0Bs) 
 that is also made by that guy.
 Then I started looking for other augmented reality/webcam sudoku solving projects.
-Many of them had very nice features, but none was perfect.
+Many of them had very nice features, but imho none was perfect.
 The following projects deserve a special mention:  
 * https://youtu.be/QR66rMS_ZfA  
 
 * https://youtu.be/uUtw6Syic6A  
 https://github.com/anhminhtran235/real_time_sudoku_solver
 
-Even though my project may seem at first glance just a combination of the best features of those mentioned above, creating it was not a trivial task. It took me more than 1 month (at least 100 hours).
+Even though my project may seem at first glance just a combination of the best features of those mentioned above, creating it was not a trivial task. It took me more than 1 month to do it (at least 100 hours).
 The most engaging was to come up with a better way to extract digits from a board for the neural network that would work for any sudoku - both those with large and small digits and both those with thick and thin grids.
 Another difficult task was the implementation of solving rotated sudoku.  
-But what I am most proud of is something that is imperceptible at first glance - my own sudoku puzzle algorithm, which I have unconsciously developed over the past few years. Its implementation was a very interesting experience.  
+But what I am most proud of is something that is imperceptible at first glance - my own sudoku puzzle algorithm, which I have "unconsciously" developed over the past few years by solving sudoku in real life. 
+Implementation of the algorithm was a very interesting experience.
 
 But THE MOST IMPORTANT thing is that while writing this project I learned A LOT OF new things.
 
