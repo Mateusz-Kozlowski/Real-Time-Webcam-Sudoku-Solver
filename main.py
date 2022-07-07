@@ -18,7 +18,7 @@ import tensorflow as tf
 
 
 def main():
-	model = tf.keras.models.load_model('Models/handwritten_cnn.h5')
+	model = tf.keras.models.load_model('models/handwritten_cnn.h5')
 
 	webcam_width, webcam_height = 1920, 1080
 	webcam = cv.VideoCapture(0)

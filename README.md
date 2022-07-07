@@ -1,4 +1,4 @@
-![output_frame](Screenshots/output_frame.png)
+![output_frame](screenshots/output_frame.png)
 
 ## -> [A VIDEO SHOWING HOW THE PROGRAM EXACTLY WORKS](https://youtu.be/S0ogoVztg-g) <-
 
@@ -103,7 +103,7 @@ webcam_sudoku_solver = WebcamSudokuSolver(model)
 
 At the beginning of each iteration of main loop a frame is read from a webcam.  
 
-![pure_frame](Screenshots/pure_frame.png)  
+![pure_frame](screenshots/pure_frame.png)  
 
 
 Then that frame is passed as an argument to the object of WebcamSudokuSolver class using solve function.  
@@ -144,7 +144,7 @@ To answer this question we have to move to webcam_sudoku_solver.py file.
 
 First task of the function is to extract a sudoku board.
 
-![warp_sudoku_board](Screenshots/warp_sudoku_board.png)  
+![warp_sudoku_board](screenshots/warp_sudoku_board.png)  
 
 
 The program assumes that a sudoku board as the biggest quadrangle in a frame.
@@ -304,7 +304,7 @@ self.last_solved_sudoku_rotation = rotation_angle
 
 Draw the current solution on a copy of the current frame and return it.  
 
-![output_frame](Screenshots/output_frame.png)  
+![output_frame](screenshots/output_frame.png)  
 
 
 ```python
